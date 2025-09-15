@@ -67,9 +67,9 @@ const SignUp = () => {
       // Call the signUp function with the required fields
       await signUp(email, password, name, userType);
       
-      // Show success message and redirect
-      toast.success('Account created successfully! Please check your email to verify.');
-      router.push('/login');
+      // Show success message and redirect to OTP verification
+      toast.success('Account created successfully! Please check your email for verification code.');
+      router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
     } catch (error: unknown) {
       // Handle API errors
       console.error('Signup error:', error);

@@ -2,14 +2,14 @@
 
 import { createContext, useContext, useState } from 'react'
 import { useSession, signIn as authSignIn, signOut as authSignOut } from 'next-auth/react'
-import { registerUser } from '../lib/auth'
+import { registerUser, verifyOtp, resendOtp, UserType } from '../lib/auth'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 
 // Extend the User type to include userType
 declare module 'next-auth' {
   interface User {
-    userType?: 'student' | 'instructor' | 'admin'
+    userType?: UserType
   }
 }
 
@@ -45,6 +45,8 @@ const AuthContext = createContext<{
   resetPassword: (token: string, password: string, confirmPassword: string) => Promise<{ status: string; message: string }>
   updatePassword: (newPassword: string) => Promise<void>
   resendVerification: (email: string) => Promise<void>
+  verifyOtp: (email: string, otp: string) => Promise<void>
+  resendOtp: (email: string) => Promise<void>
   createProfileForCurrentUser: () => Promise<boolean>
   checkDatabaseSetup: () => Promise<boolean>
   testBackendConnection: () => Promise<any>
@@ -104,14 +106,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         redirect: false
       })
 
+      console.log('SignIn result:', result); // Debug log
+
       if (result?.error) {
-        throw new Error('Invalid credentials')
+        console.log('SignIn error detected:', result.error); // Debug log
+        
+        // Handle specific error types without showing generic toast
+        if (result.error.includes('EMAIL_NOT_VERIFIED:')) {
+          const userEmail = result.error.split(':')[1] || email;
+          throw new Error(`EMAIL_NOT_VERIFIED:${userEmail}`);
+        }
+        
+        if (result.error.includes('verify your email') || 
+            result.error.includes('not verified') ||
+            result.error.includes('Please verify your email')) {
+          throw new Error(`EMAIL_NOT_VERIFIED:${email}`);
+        }
+        
+        if (result.error.includes('CallbackRouteError')) {
+          // Extract the underlying error if possible
+          throw new Error(`EMAIL_NOT_VERIFIED:${email}`);
+        }
+        
+        if (result.error.includes('AUTH_RATE_LIMIT_EXCEEDED')) {
+          throw new Error('Too many login attempts. Please try again in 15 minutes.');
+        }
+        
+        // Generic authentication error
+        throw new Error('Invalid email or password');
       }
 
-      toast.success('Welcome back!')
+      // Successful login
+      if (!result?.error) {
+        toast.success('Welcome back!')
+        return;
+      }
+
     } catch (error: unknown) {
       console.error('Sign in error:', error)
-      toast.error((error as Error).message || 'Failed to sign in')
+      const errorMessage = (error as Error).message || 'Failed to sign in';
+      
+      // Re-throw specific errors without showing toast (let caller handle)
+      if (errorMessage.startsWith('EMAIL_NOT_VERIFIED:') || 
+          errorMessage.includes('Too many login attempts')) {
+        throw new Error(errorMessage);
+      }
+      
+      // Show toast for generic errors and re-throw
+      toast.error(errorMessage)
       throw error
     } finally {
       setLoading(false)
@@ -281,6 +323,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const handleVerifyOtp = async (email: string, otp: string) => {
+    try {
+      setLoading(true)
+      await verifyOtp(email, otp)
+      toast.success('Email verified successfully!')
+    } catch (error: unknown) {
+      console.error('OTP verification error:', error)
+      toast.error((error as Error).message || 'Failed to verify OTP')
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResendOtp = async (email: string) => {
+    try {
+      setLoading(true)
+      await resendOtp(email)
+      toast.success('OTP sent successfully! Please check your email.')
+    } catch (error: unknown) {
+      console.error('Resend OTP error:', error)
+      toast.error((error as Error).message || 'Failed to resend OTP')
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const value = {
     user,
     profile,
@@ -293,6 +363,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     resetPassword,
     updatePassword,
     resendVerification,
+    verifyOtp: handleVerifyOtp,
+    resendOtp: handleResendOtp,
     createProfileForCurrentUser,
     checkDatabaseSetup,
     testBackendConnection,

@@ -8,6 +8,8 @@ import { useRouter } from 'next/navigation';
 import { Mail, Lock, Eye, EyeOff, BookOpen, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../hooks/AuthContext';
 import { loginSchema } from '../../lib/validation';
+import { signIn as nextAuthSignIn } from 'next-auth/react';
+import { logger, AuthError, AuthErrorType } from '../../lib/logger';
 import toast from 'react-hot-toast';
 import Navbar from '../../components/Navbar';
 
@@ -22,6 +24,14 @@ const Login = () => {
   useEffect(() => {
     if (!loading && user) {
       router.push('/dashboard');
+    }
+    
+    // Check if user was redirected after verification
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('verified') === 'true') {
+      toast.success('Email verified successfully! You can now sign in.');
+      // Clean up the URL
+      window.history.replaceState({}, '', '/login');
     }
   }, [user, loading, router]);
 
@@ -42,15 +52,53 @@ const Login = () => {
   const onSubmit = async (data: { email: string; password: string; userType: "student" | "instructor" | "admin"; rememberMe?: boolean }) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    
     try {
+      logger.info('Login attempt started', { email: data.email, userType: data.userType });
+      
+      // Use the AuthContext signIn method
       await signIn(data.email, data.password, data.userType);
-      router.push('/dashboard');
+      
+      // Success! Redirect to dashboard
+      logger.info('Login successful, redirecting to dashboard');
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1000);
+      
     } catch (error: unknown) {
-      if ((error as Error)?.message?.includes('Email not confirmed')) {
-        toast.error('Please confirm your email before logging in.');
-      } else {
-        toast.error('Invalid credentials. Please try again.');
+      const errorMessage = (error as Error)?.message || '';
+      logger.error('Login failed', { error: errorMessage, email: data.email });
+      
+      // Handle email verification errors
+      if (errorMessage.startsWith('EMAIL_NOT_VERIFIED:')) {
+        const userEmail = errorMessage.split(':')[1] || data.email;
+        toast.error('Please verify your email before logging in.');
+        setTimeout(() => {
+          router.push(`/verify-email?email=${encodeURIComponent(userEmail)}`);
+        }, 1000);
+        return;
       }
+      
+      // Handle rate limiting
+      if (errorMessage.includes('Too many login attempts')) {
+        toast.error('Too many login attempts. Please try again in 15 minutes.');
+        return;
+      }
+      
+      // Handle other verification-related errors
+      if (errorMessage.includes('Email not confirmed') || 
+          errorMessage.includes('not verified') ||
+          errorMessage.includes('Please verify your email')) {
+        toast.error('Please verify your email before logging in.');
+        setTimeout(() => {
+          router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        }, 1000);
+        return;
+      }
+      
+      // Generic error handling - AuthContext already shows toast for auth errors
+      logger.error('Authentication failed with unknown error', errorMessage);
+      
     } finally {
       setIsSubmitting(false);
     }

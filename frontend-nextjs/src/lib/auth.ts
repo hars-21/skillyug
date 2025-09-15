@@ -66,7 +66,8 @@ export const signupSchema = baseUserSchema.extend({
 
 // Get API URL from environment
 const getApiUrl = () => {
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -105,14 +106,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           if (response.status !== 200 && response.status !== 201) {
             console.error('Login failed:', response.data);
+            
+            // Check if the error is about email verification
+            if (response.data?.message?.includes('verify your email') || 
+                response.data?.message?.includes('not verified') ||
+                response.data?.message?.includes('Email not confirmed') ||
+                response.data?.message?.includes('Please verify your email')) {
+              // Throw a specific error that can be caught by the frontend
+              throw new Error(`EMAIL_NOT_VERIFIED:${credentials?.email}`);
+            }
+            
             return null;
           }
 
-          const userData = response.data;
+          const responseData = response.data;
+          console.log('Backend response:', responseData); // Debug log
 
-          // Validate response structure
+          // Handle the actual response structure from our backend
+          if (!responseData || responseData.status !== 'success') {
+            console.error('Invalid response status:', responseData);
+            return null;
+          }
+
+          const userData = responseData.data;
           if (!userData || !userData.user || !userData.user.id) {
-            console.error('Invalid response structure:', userData);
+            console.error('Invalid user data structure:', userData);
             return null;
           }
 
@@ -135,6 +153,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               data: error.response?.data,
               message: error.message,
             });
+            
+            // Check if the error is about email verification
+            if (error.response?.data?.message?.includes('verify your email') || 
+                error.response?.data?.message?.includes('not verified') ||
+                error.response?.data?.message?.includes('Email not confirmed') ||
+                error.response?.data?.message?.includes('Please verify your email')) {
+              // Throw a specific error that can be caught by the frontend
+              throw new Error(`EMAIL_NOT_VERIFIED:${credentials?.email}`);
+            }
+          }
+          
+          // Re-throw the error if it's already our custom format
+          if (error instanceof Error && error.message.startsWith('EMAIL_NOT_VERIFIED:')) {
+            throw error;
           }
           
           return null;
@@ -162,6 +194,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
     async redirect({ url, baseUrl }) {
+      // Handle email verification redirect
+      if (url.includes('verify-email')) {
+        return url;
+      }
+      
       // Redirect to dashboard after successful login
       if (url.includes('/login') || url === baseUrl) {
         return `${baseUrl}/dashboard`;
@@ -230,6 +267,78 @@ export async function registerUser(userData: unknown) {
     }
     
     throw error instanceof Error ? error : new Error('Registration failed');
+  }
+}
+
+// Helper function to verify OTP
+export async function verifyOtp(email: string, otp: string) {
+  try {
+    const response = await axios.post(
+      `${getApiUrl()}/auth/verify-otp`,
+      { email, otp },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000,
+        validateStatus: (status) => status < 500,
+      }
+    );
+
+    if (response.status !== 200 && response.status !== 201) {
+      const errorMessage = response.data?.message || response.data?.error || 'OTP verification failed';
+      throw new Error(errorMessage);
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('OTP verification error:', error);
+    
+    if (axios.isAxiosError(error)) {
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'OTP verification failed';
+      throw new Error(errorMessage);
+    }
+    
+    throw error instanceof Error ? error : new Error('OTP verification failed');
+  }
+}
+
+// Helper function to resend OTP
+export async function resendOtp(email: string) {
+  try {
+    const response = await axios.post(
+      `${getApiUrl()}/auth/resend-otp`,
+      { email },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000,
+        validateStatus: (status) => status < 500,
+      }
+    );
+
+    if (response.status !== 200 && response.status !== 201) {
+      const errorMessage = response.data?.message || response.data?.error || 'Failed to resend OTP';
+      throw new Error(errorMessage);
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('Resend OTP error:', error);
+    
+    if (axios.isAxiosError(error)) {
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'Failed to resend OTP';
+      throw new Error(errorMessage);
+    }
+    
+    throw error instanceof Error ? error : new Error('Failed to resend OTP');
   }
 }
 
