@@ -148,7 +148,7 @@ function LoginForm() {
           
           // Redirect based on user role
           if (checkData.user?.role === 'ADMIN') {
-            router.push('/admin');
+            router.push('/admin/dashboard');
           } else {
             router.push('/dashboard');
           }

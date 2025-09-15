@@ -14,7 +14,7 @@ const DashboardSelector = () => {
   console.log(profile);
   
   // if (!profile) return null;
-  if (profile?.user_type === "admin") return <AdminDashboard />;
+  if (profile?.user_type === "ADMIN") return <AdminDashboard />;
   if (profile?.user_type === "student") return <StudentDashboard />;
   if (profile?.user_type === "instructor" || profile?.user_type === "teacher" || profile?.user_type === "mentor") return <MentorsDashboard />;
   // Default fallback

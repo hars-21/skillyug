@@ -10,11 +10,11 @@
  * @since 2024
  */
 
-import { PrismaClient, UserType, AdminActionType } from '../src/generated/prisma';
+import { PrismaClient, UserType, AdminActionType } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // ========================================
 // CONFIGURATION & VALIDATION
@@ -78,8 +78,10 @@ interface ScriptConfig {
 interface AdminUserData {
   email: string;
   fullName: string;
+  password: string;
   userType: UserType;
   emailVerified: Date;
+  isVerified: boolean;
   bio: string;
   image: string;
   createdAt: Date;
@@ -227,8 +229,10 @@ class AdminCreator {
       const adminData: AdminUserData = {
         email: credentials.email,
         fullName: credentials.fullName,
+        password: hashedPassword, // <- Ensure your schema has this field
         userType: UserType.ADMIN,
         emailVerified: new Date(),
+        isVerified: true, // Set admin as verified
         bio: credentials.bio || 'System Administrator',
         image: credentials.imageUrl || '/Pics/GroupPic.jpg',
         createdAt: existingAdmin?.createdAt || new Date(),
@@ -331,8 +335,10 @@ class AdminCreator {
       where: { email: adminData.email },
       update: {
         fullName: adminData.fullName,
+        password: adminData.password, // <- Ensure your schema has this field
         userType: adminData.userType,
         emailVerified: adminData.emailVerified,
+        isVerified: adminData.isVerified,
         bio: adminData.bio,
         image: adminData.image,
         updatedAt: adminData.updatedAt,
@@ -340,8 +346,10 @@ class AdminCreator {
       create: {
         email: adminData.email,
         fullName: adminData.fullName,
+        password: adminData.password, // <- Ensure your schema has this field
         userType: adminData.userType,
         emailVerified: adminData.emailVerified,
+        isVerified: adminData.isVerified,
         bio: adminData.bio,
         image: adminData.image,
         createdAt: adminData.createdAt,

@@ -19,10 +19,9 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "db:push": "prisma db push",
-    "create-admin": "tsx scripts/create-admin.ts",
     "create-admin-simple": "tsx scripts/create-admin-simple.ts",
     "update-nextauth-admin": "tsx scripts/update-nextauth-admin.ts",
-    "create-admin-enterprise": "tsx scripts/create-admin-enterprise.ts"
+    "create-admin": "tsx scripts/create-admin-enterprise.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
