@@ -104,6 +104,11 @@ export class AuthService {
     const hashedOtp = await bcrypt.hash(otp, 10);
     const otpExpires = new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60 * 1000);
 
+    // Debug: Log OTP in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔐 Generated OTP for ${userData.email}: ${otp}`);
+    }
+
     // Create user
     const user = await userRepository.create({
       fullName: userData.fullName,
@@ -175,6 +180,11 @@ export class AuthService {
     const hashedOtp = await bcrypt.hash(otp, 10);
     const otpExpires = new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60 * 1000);
 
+    // Debug: Log OTP in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔐 Generated OTP for ${email}: ${otp}`);
+    }
+
     // Update user with new OTP
     await userRepository.setOtp(email, hashedOtp, otpExpires);
 
@@ -225,6 +235,72 @@ export class AuthService {
       token,
       user: safeUser,
       message: 'Login successful'
+    };
+  }
+
+  /**
+   * Check login credentials and handle unverified users
+   * This method validates credentials and either logs in verified users
+   * or sends OTP to unverified users
+   */
+  async checkLoginCredentials(email: string, password: string) {
+    const user = await userRepository.findByEmailWithPassword(email);
+    if (!user || !user.password) {
+      throw new AuthenticationError('Invalid email or password');
+    }
+
+    // Verify password first
+    const isPasswordValid = await this.comparePassword(password, user.password);
+    if (!isPasswordValid) {
+      throw new AuthenticationError('Invalid email or password');
+    }
+
+    // If user is verified, proceed with normal login
+    if (user.isVerified) {
+      const payload: UserJwtPayload = {
+        id: user.id,
+        email: user.email || '',
+        userType: user.userType
+      };
+
+      const token = this.generateJwtToken(payload);
+      const { password: _, otp, passwordResetToken, passwordResetExpires, ...safeUser } = user;
+
+      return {
+        verified: true,
+        token,
+        user: safeUser,
+        message: 'Login successful'
+      };
+    }
+
+    // User exists with correct password but is not verified
+    // Generate and send new OTP
+    const otp = this.generateOtp();
+    const hashedOtp = await bcrypt.hash(otp, 10);
+    const otpExpires = new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60 * 1000);
+
+    // Debug: Log OTP in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔐 Generated OTP for unverified login ${email}: ${otp}`);
+    }
+
+    // Update user with new OTP using transaction to prevent race conditions
+    await userRepository.setOtp(email, hashedOtp, otpExpires);
+
+    // Send OTP email
+    try {
+      await emailService.sendOtpEmail(email, otp);
+    } catch (emailError) {
+      console.error('Failed to send OTP email during login:', emailError);
+      throw new BusinessLogicError('Failed to send verification email. Please try again later.');
+    }
+
+    return {
+      needsVerification: true,
+      email: user.email,
+      message: 'Your account is not verified. A new verification code has been sent to your email.',
+      expiresIn: this.OTP_EXPIRY_MINUTES * 60 // in seconds
     };
   }
 

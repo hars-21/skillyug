@@ -1,10 +1,11 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { authService } from '../services/auth.service';
 import { ResponseUtil } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { 
   registerSchema,
   loginSchema,
+  emailLoginSchema,
   verifyOtpSchema,
   resendOtpSchema,
   forgotPasswordSchema,
@@ -14,6 +15,7 @@ import {
 import type {
   RegisterInput,
   LoginInput,
+  EmailLoginInput,
   VerifyOtpInput,
   ResendOtpInput,
   ForgotPasswordInput,
@@ -32,7 +34,7 @@ export class AuthController {
    * Register new user
    * POST /api/auth/register
    */
-  async register(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  async register(req: Request, res: Response, next: NextFunction) {
     try {
       const userData: RegisterInput = req.body;
       
@@ -48,7 +50,7 @@ export class AuthController {
    * Verify OTP
    * POST /api/auth/verify-otp
    */
-  async verifyOtp(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  async verifyOtp(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, otp }: VerifyOtpInput = req.body;
       
@@ -64,7 +66,7 @@ export class AuthController {
    * Resend OTP
    * POST /api/auth/resend-otp
    */
-  async resendOtp(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  async resendOtp(req: Request, res: Response, next: NextFunction) {
     try {
       const { email }: ResendOtpInput = req.body;
       
@@ -80,7 +82,7 @@ export class AuthController {
    * Login user
    * POST /api/auth/login
    */
-  async login(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password }: LoginInput = req.body;
       
@@ -93,10 +95,30 @@ export class AuthController {
   }
 
   /**
+   * Check login credentials (handles both verified and unverified users)
+   * POST /api/auth/login-check
+   */
+  async checkLoginCredentials(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email, password }: EmailLoginInput = req.body;
+      
+      const result = await authService.checkLoginCredentials(email, password);
+      
+      if (result.needsVerification) {
+        ResponseUtil.success(res, result, result.message);
+      } else {
+        ResponseUtil.success(res, result, result.message);
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Forgot password
    * POST /api/auth/forgot-password
    */
-  async forgotPassword(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  async forgotPassword(req: Request, res: Response, next: NextFunction) {
     try {
       const { email }: ForgotPasswordInput = req.body;
       
@@ -112,7 +134,7 @@ export class AuthController {
    * Reset password
    * PATCH /api/auth/reset-password/:token
    */
-  async resetPassword(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  async resetPassword(req: Request, res: Response, next: NextFunction) {
     try {
       const { token } = req.params;
       const { password, confirmPassword }: ResetPasswordInput = req.body;

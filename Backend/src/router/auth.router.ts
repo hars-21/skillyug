@@ -3,8 +3,15 @@ import { authController } from '../controllers/auth.controller';
 import { protect } from '../middleware/auth.middleware';
 import { validateRequest } from '../middleware/validation.middleware';
 import { 
+  authRateLimit,
+  loginRateLimit,
+  otpRateLimit,
+  passwordResetRateLimit
+} from '../middleware/rateLimiter.middleware';
+import { 
   registerSchema,
   loginSchema,
+  emailLoginSchema,
   verifyOtpSchema,
   resendOtpSchema,
   forgotPasswordSchema,
@@ -17,6 +24,7 @@ export const authRouter = Router();
 // Register a new user with OTP
 authRouter.post(
   '/register',
+  otpRateLimit,
   validateRequest({ body: registerSchema }),
   authController.register.bind(authController)
 );
@@ -24,6 +32,7 @@ authRouter.post(
 // Verify OTP
 authRouter.post(
   '/verify-otp',
+  authRateLimit,
   validateRequest({ body: verifyOtpSchema }),
   authController.verifyOtp.bind(authController)
 );
@@ -31,6 +40,7 @@ authRouter.post(
 // Resend OTP
 authRouter.post(
   '/resend-otp',
+  otpRateLimit,
   validateRequest({ body: resendOtpSchema }),
   authController.resendOtp.bind(authController)
 );
@@ -38,13 +48,23 @@ authRouter.post(
 // Login route
 authRouter.post(
   '/login',
+  loginRateLimit,
   validateRequest({ body: loginSchema }),
   authController.login.bind(authController)
+);
+
+// Login check route - validates credentials and handles unverified users
+authRouter.post(
+  '/login-check',
+  loginRateLimit,
+  validateRequest({ body: emailLoginSchema }),
+  authController.checkLoginCredentials.bind(authController)
 );
 
 // Forgot Password
 authRouter.post(
   '/forgot-password',
+  passwordResetRateLimit,
   validateRequest({ body: forgotPasswordSchema }),
   authController.forgotPassword.bind(authController)
 );
@@ -52,6 +72,7 @@ authRouter.post(
 // Reset Password
 authRouter.patch(
   '/reset-password/:token',
+  authRateLimit,
   validateRequest({ body: resetPasswordSchema }),
   authController.resetPassword.bind(authController)
 );

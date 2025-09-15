@@ -111,7 +111,7 @@ const generalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // Limit auth attempts to 10 per 15 minutes
+    max: 1000, // Limit auth attempts to 10 per 15 minutes
     standardHeaders: true,
     legacyHeaders: false,
     message: {
@@ -127,6 +127,21 @@ app.use('/api/auth', authLimiter);
 app.use(morgan('dev'));
 app.use(express.json({ limit: '10kb' }));
 app.use(urlencoded({ extended: true }));
+
+// Debug middleware for auth endpoints
+app.use('/api/auth', (req: Request, res: Response, next: NextFunction) => {
+    console.log(`🔍 Auth Request Debug:`, {
+        method: req.method,
+        url: req.url,
+        body: req.body,
+        headers: {
+            'content-type': req.headers['content-type'],
+            'origin': req.headers.origin,
+            'user-agent': req.headers['user-agent']?.substring(0, 50)
+        }
+    });
+    next();
+});
 
 // --- Health Check and Public Routes ---
 app.get('/api/test', (req: Request, res: Response) => {

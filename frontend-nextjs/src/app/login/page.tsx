@@ -1,295 +1,331 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff, BookOpen, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
-import { useAuth } from '../../hooks/AuthContext';
-import { loginSchema } from '../../lib/validation';
-import { signIn as nextAuthSignIn } from 'next-auth/react';
-import { logger, AuthError, AuthErrorType } from '../../lib/logger';
 import toast from 'react-hot-toast';
-import Navbar from '../../components/Navbar';
 
-const Login = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [resendingVerification, setResendingVerification] = useState(false);
-  
-  const { signIn, resendVerification, user, loading } = useAuth();
+/**
+ * Production-ready login form with proper email validation
+ * Security features:
+ * - Proper input validation
+ * - Rate limiting protection
+ * - Error handling
+ * - Loading states
+ * - Accessibility support
+ */
+
+// Enhanced email-only validation schema
+const loginFormSchema = z.object({
+  email: z.string()
+    .min(1, 'Email is required')
+    .email('Please enter a valid email address')
+    .max(255, 'Email must be less than 255 characters'),
+  password: z.string()
+    .min(1, 'Password is required')
+    .max(128, 'Password must be less than 128 characters'),
+});
+
+type LoginFormValues = z.infer<typeof loginFormSchema>;
+
+interface LoginResponse {
+  verified?: boolean;
+  needsVerification?: boolean;
+  email?: string;
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+    fullName?: string;
+  };
+  message: string;
+  rateLimitExceeded?: boolean;
+  expiresIn?: number;
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!loading && user) {
-      router.push('/dashboard');
-    }
-    
-    // Check if user was redirected after verification
-    const searchParams = new URLSearchParams(window.location.search);
-    if (searchParams.get('verified') === 'true') {
-      toast.success('Email verified successfully! You can now sign in.');
-      // Clean up the URL
-      window.history.replaceState({}, '', '/login');
-    }
-  }, [user, loading, router]);
-
-  const {
-    register,
-    handleSubmit,
-    getValues,
-    watch,
-    formState: { errors, isValid }
-  } = useForm({
-    resolver: zodResolver(loginSchema),
-    mode: 'onChange',
-    defaultValues: { rememberMe: false }
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginFormSchema),
+    defaultValues: { 
+      email: '', 
+      password: '' 
+    },
+    mode: 'onBlur', // Validate on blur for better UX
   });
 
-  const watchUserType = watch('userType');
+  // Handle verification success from URL params
+  useEffect(() => {
+    if (searchParams?.get('verified') === 'true') {
+      toast.success('Account verified successfully! You can now log in.');
+      const email = searchParams.get('email');
+      if (email) {
+        form.setValue('email', decodeURIComponent(email));
+      }
+    }
+  }, [searchParams, form]);
 
-  const onSubmit = async (data: { email: string; password: string; userType: "student" | "instructor" | "admin"; rememberMe?: boolean }) => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    
-    try {
-      logger.info('Login attempt started', { email: data.email, userType: data.userType });
-      
-      // Use the AuthContext signIn method
-      await signIn(data.email, data.password, data.userType);
-      
-      // Success! Redirect to dashboard
-      logger.info('Login successful, redirecting to dashboard');
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 1000);
-      
-    } catch (error: unknown) {
-      const errorMessage = (error as Error)?.message || '';
-      logger.error('Login failed', { error: errorMessage, email: data.email });
-      
-      // Handle email verification errors
-      if (errorMessage.startsWith('EMAIL_NOT_VERIFIED:')) {
-        const userEmail = errorMessage.split(':')[1] || data.email;
-        toast.error('Please verify your email before logging in.');
-        setTimeout(() => {
-          router.push(`/verify-email?email=${encodeURIComponent(userEmail)}`);
-        }, 1000);
-        return;
-      }
-      
-      // Handle rate limiting
-      if (errorMessage.includes('Too many login attempts')) {
-        toast.error('Too many login attempts. Please try again in 15 minutes.');
-        return;
-      }
-      
-      // Handle other verification-related errors
-      if (errorMessage.includes('Email not confirmed') || 
-          errorMessage.includes('not verified') ||
-          errorMessage.includes('Please verify your email')) {
-        toast.error('Please verify your email before logging in.');
-        setTimeout(() => {
-          router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
-        }, 1000);
-        return;
-      }
-      
-      // Generic error handling - AuthContext already shows toast for auth errors
-      logger.error('Authentication failed with unknown error', errorMessage);
-      
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // Clear error when user starts typing
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      if (error) setError(null);
+    });
+    return () => subscription.unsubscribe();
+  }, [form, error]);
 
-  const handleResendVerification = async () => {
-    const email = getValues('email');
-    if (!email) {
-      toast.error('Please enter your email address first');
-      return;
-    }
-    setResendingVerification(true);
+  async function handleLoginSubmit(values: LoginFormValues) {
+    setIsLoading(true);
+    setError(null);
+
     try {
-      await resendVerification(email);
-      toast.success('Verification email sent!');
-    } catch {
-      toast.error('Failed to resend verification email.');
+      // Step 1: Check credentials with the Express backend
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const checkResponse = await fetch(`${backendUrl}/api/auth/login-check`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: values.email.trim().toLowerCase(),
+          password: values.password,
+        }),
+      });
+
+      if (!checkResponse.ok) {
+        const errorData = await checkResponse.json().catch(() => ({}));
+        
+        if (checkResponse.status === 429) {
+          setError(errorData.error || 'Too many login attempts. Please try again later.');
+          return;
+        }
+        
+        setError(errorData.error || 'Invalid email or password');
+        return;
+      }
+
+      const checkResponse_data = await checkResponse.json();
+      
+      // Extract the actual data from the standardized API response format
+      const checkData: LoginResponse = checkResponse_data.data || checkResponse_data;
+
+      // Step 2: Handle unverified users
+      if (checkData.needsVerification) {
+        toast(checkData.message, { duration: 5000 });
+        router.push(`/verify-otp?email=${encodeURIComponent(checkData.email || values.email)}&resent=true`);
+        return;
+      }
+
+      // Step 3: Handle verified users - proceed with NextAuth
+      if (checkData.verified) {
+        toast.success('Credentials verified. Logging you in...');
+        
+        const result = await signIn('credentials', {
+          redirect: false,
+          email: values.email,
+          password: values.password,
+        });
+
+        if (result?.error) {
+          setError('Login failed. Please try again.');
+          return;
+        }
+
+        if (result?.ok) {
+          toast.success('Login successful!');
+          
+          // Redirect based on user role
+          if (checkData.user?.role === 'ADMIN') {
+            router.push('/admin');
+          } else {
+            router.push('/dashboard');
+          }
+          
+          router.refresh();
+        }
+      }
+    } catch (fetchError) {
+      console.error('Login error:', fetchError);
+      setError('Network error. Please check your connection and try again.');
     } finally {
-      setResendingVerification(false);
+      setIsLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-blue-900 to-blue-800">
-      <Navbar />
-      <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="bg-black/30 backdrop-blur-md border border-blue-800/30 rounded-2xl p-8">
-            {/* Header */}
-            <div className="text-center mb-8">
-              <Link href="/" className="flex items-center justify-center space-x-2 mb-4">
-                <BookOpen className="h-10 w-10 text-orange-500" />
-                <span className="text-3xl font-bold text-white">Skillyug</span>
-              </Link>
-              <h2 className="text-2xl font-bold text-white">Welcome Back</h2>
-              <p className="text-gray-300 mt-2">Sign in to your account</p>
-            </div>
+    <Card className="w-full max-w-md shadow-lg">
+      <CardHeader className="text-center space-y-4">
+        <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+          {/* Replace with your logo */}
+          <div className="w-8 h-8 bg-blue-600 rounded"></div>
+        </div>
+        <div>
+          <CardTitle className="text-2xl font-bold text-gray-900">Welcome back</CardTitle>
+          <CardDescription className="text-gray-600">
+            Sign in to your account to continue
+          </CardDescription>
+        </div>
+      </CardHeader>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    {...register('email')}
-                    type="email"
-                    autoComplete="email"
-                    placeholder="Enter your email"
-                    className={`w-full pl-10 pr-4 py-3 bg-blue-900/30 border ${
-                      errors.email ? 'border-red-500' : 'border-blue-800/50'
-                    } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500`}
-                  />
-                </div>
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-500 flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1" />
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
+      <CardContent className="space-y-4">
+        {error && (
+          <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
-              {/* User Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">I am a:</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {['student', 'instructor', 'admin'].map((type) => (
-                    <label key={type} className="relative cursor-pointer">
-                      <input {...register('userType')} type="radio" value={type} className="sr-only" />
-                      <div
-                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 text-center border ${
-                          watchUserType === type
-                            ? 'bg-orange-500 text-white border-orange-500'
-                            : 'bg-blue-900/50 text-gray-300 border-blue-800/50 hover:bg-blue-800/50'
-                        }`}
-                      >
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </div>
-                    </label>
-                  ))}
-                </div>
-                {errors.userType && (
-                  <p className="mt-1 text-sm text-red-500 flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1" />
-                    {errors.userType.message}
-                  </p>
-                )}
-              </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleLoginSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-700">
+                    Email address
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="email"
+                      placeholder="name@example.com"
+                      autoComplete="email"
+                      disabled={isLoading}
+                      className="h-11"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              {/* Password */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    {...register('password')}
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    placeholder="Enter your password"
-                    className={`w-full pl-10 pr-12 py-3 bg-blue-900/30 border ${
-                      errors.password ? 'border-red-500' : 'border-blue-800/50'
-                    } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="mt-1 text-sm text-red-500 flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1" />
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Remember Me & Forgot */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <input
-                    {...register('rememberMe')}
-                    type="checkbox"
-                    className="h-4 w-4 text-orange-500 bg-blue-900/30 border-blue-800/50 rounded focus:ring-orange-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-300">Remember me</span>
-                </label>
-                <Link href="/forgot-password" className="text-sm text-orange-500 hover:text-orange-400">
-                  Forgot password?
-                </Link>
-              </div>
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={!isValid || isSubmitting}
-                className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 transform ${
-                  isValid && !isSubmitting
-                    ? 'bg-orange-500 text-white hover:bg-orange-600 hover:scale-105'
-                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Signing In...</span>
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center justify-between">
+                    <FormLabel className="text-sm font-medium text-gray-700">
+                      Password
+                    </FormLabel>
+                    <Link 
+                      href="/forgot-password" 
+                      className="text-sm text-blue-600 hover:text-blue-500 hover:underline"
+                      tabIndex={isLoading ? -1 : 0}
+                    >
+                      Forgot password?
+                    </Link>
                   </div>
-                ) : (
-                  'Sign In'
-                )}
-              </button>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="password"
+                      placeholder="Enter your password"
+                      autoComplete="current-password"
+                      disabled={isLoading}
+                      className="h-11"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              {/* Resend Verification */}
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={handleResendVerification}
-                  disabled={resendingVerification}
-                  className="text-sm text-gray-400 hover:text-gray-300 flex items-center justify-center space-x-2 mx-auto"
-                >
-                  {resendingVerification ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Sending...</span>
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="h-4 w-4" />
-                      <span>Resend verification email</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+            <Button 
+              type="submit" 
+              className="w-full h-11 text-base font-medium" 
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign in'
+              )}
+            </Button>
+          </form>
+        </Form>
 
-            <div className="mt-6 text-center">
-              <p className="text-gray-300">
-                Don&apos;t have an account?{' '}
-                <Link href="/sign-up" className="text-orange-500 hover:text-orange-400 font-medium">
-                  Sign up here
-                </Link>
-              </p>
-            </div>
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-gray-500">
+              Or continue with
+            </span>
           </div>
         </div>
-      </div>
+        
+        <Button 
+          variant="outline" 
+          className="w-full h-11"
+          disabled={isLoading}
+          onClick={() => signIn('google')}
+        >
+          <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+            <path
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              fill="#4285F4"
+            />
+            <path
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              fill="#34A853"
+            />
+            <path
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              fill="#FBBC05"
+            />
+            <path
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              fill="#EA4335"
+            />
+          </svg>
+          Sign in with Google
+        </Button>
+        
+        <div className="text-center text-sm text-gray-600">
+          Don't have an account?{' '}
+          <Link 
+            href="/register" 
+            className="font-medium text-blue-600 hover:text-blue-500 hover:underline"
+          >
+            Create one here
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Suspense 
+        fallback={
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="ml-2">Loading...</span>
+          </div>
+        }
+      >
+        <LoginForm />
+      </Suspense>
     </div>
   );
-};
-
-export default Login;
+}

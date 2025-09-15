@@ -41,6 +41,12 @@ export const loginSchema = z.object({
   userType: userTypeSchema.optional(),
 }).strict();
 
+// Enhanced login schema for email-based authentication (no phone support)
+export const emailLoginSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, 'Password is required'),
+}).strict();
+
 export const verifyOtpSchema = z.object({
   email: emailSchema,
   otp: z.string()
@@ -174,6 +180,7 @@ export const userIdSchema = z.object({
 // Type exports for TypeScript
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type EmailLoginInput = z.infer<typeof emailLoginSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type ResendOtpInput = z.infer<typeof resendOtpSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;

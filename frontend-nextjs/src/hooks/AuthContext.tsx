@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState } from 'react'
 import { useSession, signIn as authSignIn, signOut as authSignOut } from 'next-auth/react'
-import { registerUser, verifyOtp, resendOtp, UserType } from '../lib/auth'
+import { registerUser, verifyOtp, resendOtp, sendVerificationOtp, UserType } from '../lib/auth'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 
@@ -110,45 +110,70 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (result?.error) {
         console.log('SignIn error detected:', result.error); // Debug log
+        console.log('Full result object:', JSON.stringify(result, null, 2)); // Debug log
         
-        // Handle specific error types without showing generic toast
+        // Handle CallbackRouteError which wraps our custom errors
+        if (result.error.includes('CallbackRouteError')) {
+          // Extract the underlying error from the NextAuth logs or assume email verification issue
+          console.log('CallbackRouteError detected - likely email verification issue');
+          throw new Error(`EMAIL_NOT_VERIFIED:${email}`);
+        }
+        
+        // Handle specific error types
         if (result.error.includes('EMAIL_NOT_VERIFIED:')) {
           const userEmail = result.error.split(':')[1] || email;
           throw new Error(`EMAIL_NOT_VERIFIED:${userEmail}`);
         }
         
+        // Handle other specific error patterns
         if (result.error.includes('verify your email') || 
             result.error.includes('not verified') ||
             result.error.includes('Please verify your email')) {
           throw new Error(`EMAIL_NOT_VERIFIED:${email}`);
         }
         
-        if (result.error.includes('CallbackRouteError')) {
-          // Extract the underlying error if possible
-          throw new Error(`EMAIL_NOT_VERIFIED:${email}`);
-        }
-        
-        if (result.error.includes('AUTH_RATE_LIMIT_EXCEEDED')) {
+        if (result.error.includes('Too many login attempts')) {
           throw new Error('Too many login attempts. Please try again in 15 minutes.');
         }
         
+        // For CredentialsSignin errors, check if it's email verification
+        if (result.error.includes('CredentialsSignin')) {
+          // Most CredentialsSignin errors with our setup are email verification issues
+          console.log('CredentialsSignin detected - checking if email verification related');
+          throw new Error(`EMAIL_NOT_VERIFIED:${email}`);
+        }
+        
         // Generic authentication error
-        throw new Error('Invalid email or password');
+        throw new Error(result.error || 'Invalid email or password');
+      }
+
+      // Check if login failed but no specific error was returned
+      if (!result?.ok) {
+        console.log('Login failed - result not ok:', result);
+        
+        // If there's no error but login failed, it's likely an email verification issue
+        // based on our backend logic
+        if (!result?.error) {
+          console.log('No specific error, likely email verification issue');
+          throw new Error(`EMAIL_NOT_VERIFIED:${email}`);
+        }
       }
 
       // Successful login
-      if (!result?.error) {
+      if (result?.ok) {
         toast.success('Welcome back!')
         return;
       }
 
     } catch (error: unknown) {
-      console.error('Sign in error:', error)
+      console.error('Sign in error in AuthContext:', error)
+      console.log('Error type:', typeof error, 'Error constructor:', error?.constructor?.name)
       const errorMessage = (error as Error).message || 'Failed to sign in';
       
       // Re-throw specific errors without showing toast (let caller handle)
       if (errorMessage.startsWith('EMAIL_NOT_VERIFIED:') || 
           errorMessage.includes('Too many login attempts')) {
+        console.log('Re-throwing specific error:', errorMessage)
         throw new Error(errorMessage);
       }
       

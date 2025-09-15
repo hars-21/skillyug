@@ -17,6 +17,7 @@ declare module "next-auth" {
       id: string;
       userType: UserType;
       accessToken?: string;
+      emailVerificationRequired?: boolean;
     } & DefaultSession["user"];
   }
 
@@ -27,14 +28,14 @@ declare module "next-auth" {
     image?: string | null;
     userType?: UserType;
     accessToken?: string;
+    emailVerificationRequired?: boolean;
   }
 }
 
-// Validation schemas
+// Validation schemas for NextAuth (simplified - backend handles full validation)
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
-  userType: z.enum(['STUDENT', 'MENTOR', 'ADMIN']),
+  password: z.string().min(1), // Just check it's not empty
 });
 
 const baseUserSchema = z.object({
@@ -77,21 +78,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
-        userType: { label: "User Type", type: "text" },
       },
       async authorize(credentials) {
         try {
-          // Map frontend role 'instructor' to backend 'MENTOR'
-          const rawUserType = credentials?.userType?.toString().toUpperCase();
-          const mappedUserType = rawUserType === 'INSTRUCTOR' ? 'MENTOR' : rawUserType;
-
           const validatedInput = loginSchema.parse({
             email: credentials?.email,
             password: credentials?.password,
-            userType: mappedUserType
           });
 
-          // Call backend API for authentication
+          // Call backend API for authentication (using login-check endpoint)
           const response = await axios.post(
             `${getApiUrl()}/auth/login`,
             validatedInput,
@@ -112,11 +107,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 response.data?.message?.includes('not verified') ||
                 response.data?.message?.includes('Email not confirmed') ||
                 response.data?.message?.includes('Please verify your email')) {
-              // Throw a specific error that can be caught by the frontend
-              throw new Error(`EMAIL_NOT_VERIFIED:${credentials?.email}`);
+              // Throw a specific error that NextAuth will forward
+              throw new Error(`EMAIL_NOT_VERIFIED:${validatedInput.email}`);
             }
             
-            return null;
+            // For other authentication errors, throw a generic error
+            const errorMessage = response.data?.message || response.data?.error || 'Authentication failed';
+            throw new Error(errorMessage);
           }
 
           const responseData = response.data;
@@ -129,7 +126,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
 
           const userData = responseData.data;
-          if (!userData || !userData.user || !userData.user.id) {
+          
+          // Check if user needs verification
+          if (userData.needsVerification) {
+            // For unverified users, throw an error that the frontend can catch
+            throw new Error(`EMAIL_NOT_VERIFIED:${validatedInput.email}`);
+          }
+          
+          // For verified users, proceed with login
+          // Check that we have the necessary user data and token
+          if (!userData.user || !userData.user.id || !userData.token) {
             console.error('Invalid user data structure:', userData);
             return null;
           }
@@ -141,7 +147,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             email: userData.user.email,
             image: userData.user.image,
             userType: userData.user.userType,
-            accessToken: userData.token || userData.accessToken,
+            accessToken: userData.token,
+            emailVerificationRequired: false,
           };
         } catch (error) {
           console.error("Authorization Error:", error);
@@ -159,17 +166,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 error.response?.data?.message?.includes('not verified') ||
                 error.response?.data?.message?.includes('Email not confirmed') ||
                 error.response?.data?.message?.includes('Please verify your email')) {
-              // Throw a specific error that can be caught by the frontend
-              throw new Error(`EMAIL_NOT_VERIFIED:${credentials?.email}`);
+              // Throw a specific error that NextAuth will forward
+              const email = credentials?.email || '';
+              throw new Error(`EMAIL_NOT_VERIFIED:${email}`);
             }
+            
+            // For other errors, throw the specific error message
+            const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
+            throw new Error(errorMessage);
           }
           
-          // Re-throw the error if it's already our custom format
+          // Re-throw the error if it's already a custom error (like EMAIL_NOT_VERIFIED)
           if (error instanceof Error && error.message.startsWith('EMAIL_NOT_VERIFIED:')) {
             throw error;
           }
           
-          return null;
+          // For any other errors, throw a generic message
+          throw new Error('Authentication failed');
         }
       },
     }),
@@ -181,6 +194,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.sub = user.id;
         token.userType = user.userType as UserType;
         token.accessToken = user.accessToken;
+        token.emailVerificationRequired = user.emailVerificationRequired;
+        token.email = user.email;
       }
       
       return token;
@@ -190,6 +205,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = (token.sub as string) || '';
         session.user.userType = token.userType as UserType;
         session.user.accessToken = token.accessToken as string;
+        session.user.emailVerificationRequired = token.emailVerificationRequired as boolean;
+        session.user.email = token.email as string;
       }
       return session;
     },
@@ -339,6 +356,42 @@ export async function resendOtp(email: string) {
     }
     
     throw error instanceof Error ? error : new Error('Failed to resend OTP');
+  }
+}
+
+// Helper function to automatically send OTP for email verification
+export async function sendVerificationOtp(email: string) {
+  try {
+    const response = await axios.post(
+      `${getApiUrl()}/auth/resend-otp`,
+      { email },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000,
+        validateStatus: (status) => status < 500,
+      }
+    );
+
+    if (response.status !== 200 && response.status !== 201) {
+      const errorMessage = response.data?.message || response.data?.error || 'Failed to send verification code';
+      throw new Error(errorMessage);
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('Send verification OTP error:', error);
+    
+    if (axios.isAxiosError(error)) {
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'Failed to send verification code';
+      throw new Error(errorMessage);
+    }
+    
+    throw error instanceof Error ? error : new Error('Failed to send verification code');
   }
 }
 
