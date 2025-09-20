@@ -3,10 +3,12 @@
 import React from 'react';
 import { useAuth } from "../hooks/AuthContext";
 import { LogOut, Users, BookOpen, BarChart3, Settings } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 const AdminDashboard = () => {
   const { signOut, profile } = useAuth();
+  const router = useRouter();
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-black via-blue-900 to-blue-800">
@@ -24,7 +26,12 @@ const AdminDashboard = () => {
         <nav className="flex flex-col space-y-3 flex-grow">
           <button className="w-full text-left p-3 bg-orange-500 rounded-lg font-semibold">Dashboard</button>
           <button className="w-full text-left p-3 hover:bg-blue-800 rounded-lg">Users</button>
-          <button className="w-full text-left p-3 hover:bg-blue-800 rounded-lg">Courses</button>
+          <button 
+            onClick={() => router.push('/admin/courses')}
+            className="w-full text-left p-3 hover:bg-blue-800 rounded-lg"
+          >
+            Courses
+          </button>
           <button className="w-full text-left p-3 hover:bg-blue-800 rounded-lg">Analytics</button>
           <button className="w-full text-left p-3 hover:bg-blue-800 rounded-lg">Settings</button>
         </nav>
@@ -101,7 +108,10 @@ const AdminDashboard = () => {
             <div className="bg-black/30 backdrop-blur-md border border-blue-800/30 rounded-xl p-6">
               <h3 className="text-xl font-semibold text-white mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <button className="w-full text-left p-3 bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors">
+                <button 
+                  onClick={() => router.push('/admin/courses')}
+                  className="w-full text-left p-3 bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+                >
                   Add New Course
                 </button>
                 <button className="w-full text-left p-3 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
