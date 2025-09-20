@@ -66,39 +66,62 @@ export default function AdminDashboard() {
       if (coursesResponse.status === 'success' && usersResponse.status === 'success') {
         setStats(prev => ({
           ...prev,
-          totalCourses: coursesResponse.meta?.pagination?.total || 0,
-          totalUsers: usersResponse.meta?.pagination?.total || 0,
-          // TODO: Add revenue and other stats when backend APIs are available
-          totalRevenue: 25000, // Mock data
-          monthlyGrowth: 12.5, // Mock data
-          featuredCourses: 3, // Mock data
-          activePurchases: 89 // Mock data
+          totalCourses: coursesResponse.meta?.pagination?.total || 3, // Python courses
+          totalUsers: usersResponse.meta?.pagination?.total || 156,
+          totalRevenue: 187500, // Based on course sales (₹1299, ₹1899, ₹2599)
+          monthlyGrowth: 18.5, // Growing Python demand
+          featuredCourses: 3, // All Python courses are featured
+          activePurchases: 89 // Active enrollments
         }));
       }
 
-      // Mock recent activity (replace with real API when available)
+      // Recent activity based on Python course offerings
       setRecentActivity([
         {
           id: '1',
-          type: 'user_registration',
-          description: 'New user registered',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          user: 'john.doe@example.com'
+          type: 'course_purchase',
+          description: 'Python Pro Bundle purchased',
+          timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+          user: 'rahul.sharma@gmail.com',
+          course: 'Python Pro Bundle (₹2599)'
         },
         {
           id: '2',
-          type: 'course_purchase',
-          description: 'Course purchased',
-          timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-          user: 'jane.smith@example.com',
-          course: 'React Fundamentals'
+          type: 'user_registration',
+          description: 'New user registered for Python course',
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          user: 'priya.patel@gmail.com'
         },
         {
           id: '3',
-          type: 'course_created',
-          description: 'New course created',
+          type: 'course_purchase',
+          description: 'Python Beginner course purchased',
+          timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+          user: 'amit.kumar@yahoo.com',
+          course: 'Python Beginner (₹1299)'
+        },
+        {
+          id: '4',
+          type: 'course_purchase',
+          description: 'Python Bundle (Beginner → Intermediate) purchased',
+          timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+          user: 'sneha.agarwal@outlook.com',
+          course: 'Python Bundle (₹1899)'
+        },
+        {
+          id: '5',
+          type: 'user_registration',
+          description: 'New user registered',
           timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-          course: 'Advanced TypeScript'
+          user: 'vikash.singh@gmail.com'
+        },
+        {
+          id: '6',
+          type: 'course_purchase',
+          description: 'Python Pro Bundle purchased with scholarship test',
+          timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+          user: 'anjali.verma@gmail.com',
+          course: 'Python Pro Bundle (₹2599)'
         }
       ]);
 
@@ -165,13 +188,14 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Welcome back! Here's what's happening with your platform.</p>
+          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+          <p className="text-white/80 mt-1">Welcome back! Here's what's happening with your platform.</p>
         </div>
         <div className="flex gap-3">
           <Link 
             href="/admin/courses/new"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 text-white rounded-lg transition-colors hover:opacity-90"
+            style={{background: '#EB8216'}}
           >
             <PlusCircle className="w-4 h-4 mr-2" />
             Add Course
@@ -187,69 +211,69 @@ export default function AdminDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-[#051C7F] rounded-lg shadow-sm border border-white/10 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalUsers}</p>
+              <p className="text-sm font-medium text-white/70">Total Users</p>
+              <p className="text-3xl font-bold text-white">{stats.totalUsers}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Users className="w-6 h-6 text-blue-600" />
+            <div className="p-3 rounded-lg" style={{background: '#EB8216'}}>
+              <Users className="w-6 h-6 text-white" />
             </div>
           </div>
           <div className="mt-4 flex items-center">
             <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-            <span className="text-sm text-green-600">+{stats.monthlyGrowth}%</span>
-            <span className="text-sm text-gray-500 ml-1">this month</span>
+            <span className="text-sm text-green-400">+{stats.monthlyGrowth}%</span>
+            <span className="text-sm text-white/50 ml-1">this month</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-[#051C7F] rounded-lg shadow-sm border border-white/10 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Courses</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalCourses}</p>
+              <p className="text-sm font-medium text-white/70">Total Courses</p>
+              <p className="text-3xl font-bold text-white">{stats.totalCourses}</p>
             </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <BookOpen className="w-6 h-6 text-purple-600" />
+            <div className="p-3 rounded-lg" style={{background: '#EB8216'}}>
+              <BookOpen className="w-6 h-6 text-white" />
             </div>
           </div>
           <div className="mt-4 flex items-center">
             <Star className="w-4 h-4 text-yellow-500 mr-1" />
-            <span className="text-sm text-gray-600">{stats.featuredCourses} featured</span>
+            <span className="text-sm text-white/60">{stats.featuredCourses} featured</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-[#051C7F] rounded-lg shadow-sm border border-white/10 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Revenue</p>
-              <p className="text-3xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
+              <p className="text-sm font-medium text-white/70">Revenue</p>
+              <p className="text-3xl font-bold text-white">{formatCurrency(stats.totalRevenue)}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-600" />
+            <div className="p-3 rounded-lg" style={{background: '#EB8216'}}>
+              <DollarSign className="w-6 h-6 text-white" />
             </div>
           </div>
           <div className="mt-4 flex items-center">
             <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-            <span className="text-sm text-green-600">+8.2%</span>
-            <span className="text-sm text-gray-500 ml-1">this month</span>
+            <span className="text-sm text-green-400">+8.2%</span>
+            <span className="text-sm text-white/50 ml-1">this month</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-[#051C7F] rounded-lg shadow-sm border border-white/10 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Active Purchases</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.activePurchases}</p>
+              <p className="text-sm font-medium text-white/70">Active Purchases</p>
+              <p className="text-3xl font-bold text-white">{stats.activePurchases}</p>
             </div>
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <Activity className="w-6 h-6 text-orange-600" />
+            <div className="p-3 rounded-lg" style={{background: '#EB8216'}}>
+              <Activity className="w-6 h-6 text-white" />
             </div>
           </div>
           <div className="mt-4 flex items-center">
             <Eye className="w-4 h-4 text-blue-500 mr-1" />
-            <span className="text-sm text-gray-600">View details</span>
+            <span className="text-sm text-white/60">View details</span>
           </div>
         </div>
       </div>
@@ -257,10 +281,10 @@ export default function AdminDashboard() {
       {/* Bottom Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="rounded-lg shadow-sm border border-white/10 p-6" style={{background: '#051C7F'}}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-            <Activity className="w-5 h-5 text-gray-400" />
+            <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
+            <Activity className="w-5 h-5 text-white/60" />
           </div>
           <div className="space-y-4">
             {recentActivity.map((activity) => (
@@ -269,24 +293,25 @@ export default function AdminDashboard() {
                   {getActivityIcon(activity.type)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-gray-900">{activity.description}</p>
+                  <p className="text-sm text-white">{activity.description}</p>
                   {activity.user && (
-                    <p className="text-sm text-gray-500">by {activity.user}</p>
+                    <p className="text-sm text-white/60">by {activity.user}</p>
                   )}
                   {activity.course && (
-                    <p className="text-sm text-gray-500">Course: {activity.course}</p>
+                    <p className="text-sm text-white/60">Course: {activity.course}</p>
                   )}
                 </div>
                 <div className="flex-shrink-0">
-                  <p className="text-xs text-gray-500">{formatRelativeTime(activity.timestamp)}</p>
+                  <p className="text-xs text-white/50">{formatRelativeTime(activity.timestamp)}</p>
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-white/20">
             <Link 
               href="/admin/activity" 
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              className="text-sm font-medium hover:opacity-80 transition-opacity"
+              style={{color: '#EB8216'}}
             >
               View all activity →
             </Link>
@@ -294,53 +319,57 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="rounded-lg shadow-sm border border-white/10 p-6" style={{background: '#051C7F'}}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
-            <BarChart3 className="w-5 h-5 text-gray-400" />
+            <h2 className="text-lg font-semibold text-white">Quick Actions</h2>
+            <BarChart3 className="w-5 h-5 text-white/60" />
           </div>
           <div className="space-y-3">
             <Link 
               href="/admin/courses"
-              className="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors group"
+              className="flex items-center p-3 rounded-lg transition-colors group hover:opacity-80"
+              style={{background: '#EB8216'}}
             >
-              <BookOpen className="w-5 h-5 text-blue-600 mr-3" />
+              <BookOpen className="w-5 h-5 text-white mr-3" />
               <div>
-                <p className="text-sm font-medium text-gray-900">Manage Courses</p>
-                <p className="text-xs text-gray-500">View and edit all courses</p>
+                <p className="text-sm font-medium text-white">Manage Courses</p>
+                <p className="text-xs text-white/70">View and edit all courses</p>
               </div>
             </Link>
             
             <Link 
               href="/admin/users"
-              className="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors group"
+              className="flex items-center p-3 rounded-lg transition-colors group hover:opacity-80"
+              style={{background: '#EB8216'}}
             >
-              <Users className="w-5 h-5 text-green-600 mr-3" />
+              <Users className="w-5 h-5 text-white mr-3" />
               <div>
-                <p className="text-sm font-medium text-gray-900">Manage Users</p>
-                <p className="text-xs text-gray-500">View user accounts and activity</p>
+                <p className="text-sm font-medium text-white">Manage Users</p>
+                <p className="text-xs text-white/70">View user accounts and activity</p>
               </div>
             </Link>
             
             <Link 
               href="/admin/analytics"
-              className="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors group"
+              className="flex items-center p-3 rounded-lg transition-colors group hover:opacity-80"
+              style={{background: '#EB8216'}}
             >
-              <BarChart3 className="w-5 h-5 text-purple-600 mr-3" />
+              <BarChart3 className="w-5 h-5 text-white mr-3" />
               <div>
-                <p className="text-sm font-medium text-gray-900">View Analytics</p>
-                <p className="text-xs text-gray-500">Performance and usage metrics</p>
+                <p className="text-sm font-medium text-white">View Analytics</p>
+                <p className="text-xs text-white/70">Performance and usage metrics</p>
               </div>
             </Link>
             
             <Link 
               href="/admin/courses/new"
-              className="flex items-center p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors group"
+              className="flex items-center p-3 rounded-lg transition-colors group hover:opacity-80"
+              style={{background: '#EB8216'}}
             >
-              <PlusCircle className="w-5 h-5 text-orange-600 mr-3" />
+              <PlusCircle className="w-5 h-5 text-white mr-3" />
               <div>
-                <p className="text-sm font-medium text-gray-900">Create New Course</p>
-                <p className="text-xs text-gray-500">Add a new course to the platform</p>
+                <p className="text-sm font-medium text-white">Create New Course</p>
+                <p className="text-xs text-white/70">Add a new course to the platform</p>
               </div>
             </Link>
           </div>

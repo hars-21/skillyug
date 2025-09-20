@@ -192,7 +192,7 @@ export interface AdminCourse {
 }
 
 export interface CreateCourseInput {
-  title: string;
+  courseName: string;
   description: string;
   category: string;
   difficulty: string;

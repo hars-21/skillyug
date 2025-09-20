@@ -107,15 +107,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   // Render admin content with sidebar
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+    <div className="min-h-screen bg-[#2741D6]">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900/95 backdrop-blur-xl border-r border-white/10 transform transition-transform duration-300 ease-in-out ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 backdrop-blur-xl border-r border-white/10 transform transition-transform duration-300 ease-in-out ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } lg:translate-x-0`}>
+      } lg:translate-x-0`} style={{background: '#051C7F'}}>
         {/* Logo */}
         <div className="flex items-center justify-between p-6">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{background: '#EB8216'}}>
               <Home className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-white">SkillYug Admin</span>
@@ -182,7 +182,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Main Content */}
       <div className="lg:pl-64">
         {/* Top Navigation Bar */}
-        <div className="bg-slate-900/95 backdrop-blur-xl border-b border-white/10 p-4 lg:hidden">
+        <div className="backdrop-blur-xl border-b border-white/10 p-4 lg:hidden" style={{background: '#051C7F'}}>
           <div className="flex items-center justify-between">
             <button
               onClick={() => setSidebarOpen(true)}
