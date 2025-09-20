@@ -16,7 +16,7 @@ services:
     networks:
       - skillyug-dev-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U skillyug_user -d skillyug_dev"]
+      test: [ "CMD-SHELL", "pg_isready -U skillyug_user -d skillyug_dev" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,7 +33,7 @@ services:
     networks:
       - skillyug-dev-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -54,7 +54,7 @@ services:
       AUTH_SECRET: your-super-secret-auth-key-for-development
       RAZORPAY_KEY: your_razorpay_key_here
       RAZORPAY_SECRET: your_razorpay_secret_here
-      FRONTEND_URL: http://localhost:3000
+      FRONTEND_URL: http://frontend:3000
       # Email development settings
       EMAIL_HOST: smtp.mailtrap.io
       EMAIL_PORT: 587
@@ -62,11 +62,10 @@ services:
       EMAIL_PASS: your_mailtrap_password
     ports:
       - "5000:5000"
-      - "9229:9229"  # Node.js debugging port
+      - "9229:9229" # Node.js debugging port
     volumes:
       - ./Backend:/app
       - /app/node_modules
-      - /app/dist
       - ./Backend/uploads:/app/uploads
     networks:
       - skillyug-dev-network
@@ -75,7 +74,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: ["pnpm", "dev"]
+    command: [ "pnpm", "dev" ]
 
   # Frontend Development Service with Hot Reload
   frontend:
@@ -86,10 +85,10 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: development
-      NEXT_PUBLIC_API_URL: http://localhost:5000/api
-      NEXT_PUBLIC_BACKEND_URL: http://localhost:5000
+      NEXT_PUBLIC_API_URL: http://backend:5000/api
+      NEXT_PUBLIC_BACKEND_URL: http://backend:5000
       NEXT_PUBLIC_RAZORPAY_KEY: your_razorpay_key_here
-      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_URL: http://frontend:3000
       NEXTAUTH_SECRET: your-super-secret-nextauth-key-for-development
       DATABASE_URL: postgresql://skillyug_user:skillyug_dev_password@postgres:5432/skillyug_dev?schema=public
     ports:
@@ -102,7 +101,7 @@ services:
     depends_on:
       - backend
       - postgres
-    command: ["pnpm", "dev"]
+    command: [ "pnpm", "dev" ]
 
   # Database Migration Service
   migrate:
@@ -120,7 +119,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["pnpm", "db:migrate"]
+    command: [ "pnpm", "db:migrate" ]
     restart: "no"
 
   # Database Seeding Service
@@ -139,7 +138,7 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
-    command: ["pnpm", "db:seed"]
+    command: [ "pnpm", "db:seed" ]
     restart: "no"
 
   # Prisma Studio for Database Management
@@ -161,7 +160,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["pnpm", "db:studio"]
+    command: [ "pnpm", "db:studio" ]
 
 # Named volumes for development persistent data
 volumes:
