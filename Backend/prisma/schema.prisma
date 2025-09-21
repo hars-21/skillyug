@@ -16,33 +16,33 @@ datasource db {
 // ========================================
 
 model User {
-  id                   String    @id @default(cuid())
-  fullName             String?   @map("full_name")
-  email                String?   @unique
-  password             String?   @db.Text // Hashed password for local authentication
-  emailVerified        DateTime? @map("email_verified") // Auth.js standard field
-  
+  id            String    @id @default(cuid())
+  fullName      String?   @map("full_name")
+  email         String?   @unique
+  password      String?   @db.Text // Hashed password for local authentication
+  emailVerified DateTime? @map("email_verified") // Auth.js standard field
+
   // --- OTP VERIFICATION FIELDS ---
-  otp                  String?   @db.Text // Hashed OTP
-  otpExpires           DateTime? @map("otp_expires") // Expiration time for the OTP
-  isVerified           Boolean   @default(false) @map("is_verified")
+  otp        String?   @db.Text // Hashed OTP
+  otpExpires DateTime? @map("otp_expires") // Expiration time for the OTP
+  isVerified Boolean   @default(false) @map("is_verified")
 
   // --- PASSWORD RESET FIELDS ---
-  passwordResetToken   String?   @unique @db.Text @map("password_reset_token")
+  passwordResetToken   String?   @unique @map("password_reset_token") @db.Text
   passwordResetExpires DateTime? @map("password_reset_expires")
-  
-  image                String?   // Avatar URL
-  bio                  String?   // User bio for profile page
-  userType             UserType  @default(STUDENT) @map("user_type")
-  createdAt            DateTime  @default(now()) @map("created_at")
-  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  image     String? // Avatar URL
+  bio       String? // User bio for profile page
+  userType  UserType @default(STUDENT) @map("user_type")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Auth.js relations
   accounts Account[]
   sessions Session[]
 
   // App-specific relations
-  coursesAsMentor Course[]         @relation("CourseMentor")
+  coursesAsMentor Course[]           @relation("CourseMentor")
   purchases       Purchase[]
   enrollments     Enrollment[]
   reviews         Review[]
@@ -102,15 +102,16 @@ enum UserType {
 
 enum Category {
   PROGRAMMING
-  DEVELOPMENT
-  DEVOPS
-  BUSINESS
-  DESIGN
-  MARKETING
+  WEB_DEVELOPMENT
+  MOBILE_DEVELOPMENT
   DATA_SCIENCE
-  AI_ML
+  ARTIFICIAL_INTELLIGENCE
+  CLOUD_COMPUTING
   CYBERSECURITY
-  MOBILE
+  DESIGN
+  BUSINESS
+  MARKETING
+  OTHER
 
   @@map("category")
 }
@@ -129,38 +130,38 @@ enum Difficulty {
 // ========================================
 
 model Course {
-  id              String     @id @default(cuid())
-  courseName      String     @map("course_name")
-  description     String?
-  imageUrl        String     @map("image_url")
-  price           Decimal    @db.Decimal(10, 2)
-  tokenPrice      Int?       @map("token_price") // Cost in platform tokens/credits
-  category        Category
-  difficulty      Difficulty @default(BEGINNER)
-  durationHours   Int?       @map("duration_hours")
-  language        String     @default("English")
-  isActive        Boolean    @default(true) @map("is_active")
-  isFeatured      Boolean    @default(false) @map("is_featured")
-  learningPathId  String?    @map("learning_path_id")
-  createdAt       DateTime   @default(now()) @map("created_at")
-  updatedAt       DateTime   @updatedAt @map("updated_at")
+  id             String     @id @default(cuid())
+  courseName     String     @map("course_name")
+  description    String?
+  imageUrl       String     @map("image_url")
+  price          Decimal    @db.Decimal(10, 2)
+  token          Int        @default(0) // Number of tokens required to enroll       
+  category       Category
+  difficulty     Difficulty @default(BEGINNER)
+  durationHours  Int?       @map("duration_hours")
+  language       String     @default("English")
+  isActive       Boolean    @default(true) @map("is_active")
+  isFeatured     Boolean    @default(false) @map("is_featured")
+  learningPathId String?    @map("learning_path_id")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
 
   // Denormalized for query performance
-  ratingAverage Decimal @default(0) @db.Decimal(3, 2) @map("rating_average")
+  ratingAverage Decimal @default(0) @map("rating_average") @db.Decimal(3, 2)
   reviewCount   Int     @default(0) @map("review_count")
 
   // Relations
-  mentor          User       @relation("CourseMentor", fields: [mentorId], references: [id])
-  mentorId        String     @map("mentor_id")
-  lessons         Lesson[]
-  enrollments     Enrollment[]
-  purchaseItems   PurchaseItem[]
-  reviews         Review[]
-  prerequisites   CoursePrerequisite[] @relation("Prerequisites")
-  requiredFor     CoursePrerequisite[] @relation("RequiredFor")
-  tags            CourseTag[]
-  learningPath    LearningPath? @relation(fields: [learningPathId], references: [id])
-  bundles         CourseBundle[]
+  mentor        User                 @relation("CourseMentor", fields: [mentorId], references: [id])
+  mentorId      String               @map("mentor_id")
+  lessons       Lesson[]
+  enrollments   Enrollment[]
+  purchaseItems PurchaseItem[]
+  reviews       Review[]
+  prerequisites CoursePrerequisite[] @relation("Prerequisites")
+  requiredFor   CoursePrerequisite[] @relation("RequiredFor")
+  tags          CourseTag[]
+  learningPath  LearningPath?        @relation(fields: [learningPathId], references: [id])
+  bundles       CourseBundle[]
 
   @@index([mentorId])
   @@map("courses")
@@ -178,11 +179,11 @@ model LearningPath {
 
 // Defines prerequisites for a course
 model CoursePrerequisite {
-  courseId        String @map("course_id")
-  prerequisiteId  String @map("prerequisite_id")
+  courseId       String @map("course_id")
+  prerequisiteId String @map("prerequisite_id")
 
-  course          Course @relation("Prerequisites", fields: [courseId], references: [id], onDelete: Cascade)
-  prerequisite    Course @relation("RequiredFor", fields: [prerequisiteId], references: [id], onDelete: Cascade)
+  course       Course @relation("Prerequisites", fields: [courseId], references: [id], onDelete: Cascade)
+  prerequisite Course @relation("RequiredFor", fields: [prerequisiteId], references: [id], onDelete: Cascade)
 
   @@id([courseId, prerequisiteId])
   @@map("course_prerequisites")
@@ -201,7 +202,7 @@ model Lesson {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  course   Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course   Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
   progress LessonProgress[]
   threads  DiscussionThread[]
 
@@ -210,10 +211,10 @@ model Lesson {
 }
 
 model CourseTag {
-  id    String   @id @default(cuid())
-  name  String   @unique
-  color String?  @default("#3B82F6") // Hex color for UI
-  
+  id    String  @id @default(cuid())
+  name  String  @unique
+  color String? @default("#3B82F6") // Hex color for UI
+
   courses Course[]
 
   @@map("course_tags")
@@ -225,15 +226,15 @@ model CourseTag {
 
 // Represents a sellable package of courses
 model Bundle {
-  id             String         @id @default(cuid())
-  name           String
-  description    String?
-  price          Decimal        @db.Decimal(10, 2)
-  imageUrl       String?        @map("image_url")
-  isActive       Boolean        @default(true) @map("is_active")
-  
-  courses        CourseBundle[]
-  purchaseItems  PurchaseItem[]
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal @db.Decimal(10, 2)
+  imageUrl    String? @map("image_url")
+  isActive    Boolean @default(true) @map("is_active")
+
+  courses       CourseBundle[]
+  purchaseItems PurchaseItem[]
 
   @@map("bundles")
 }
@@ -252,34 +253,34 @@ model CourseBundle {
 
 // An "order" or "cart" at the time of transaction
 model Purchase {
-  id          String    @id @default(cuid())
-  userId      String    @map("user_id")
-  totalAmount Decimal   @db.Decimal(10, 2) @map("total_amount")
-  purchasedAt DateTime  @default(now()) @map("purchased_at")
+  id          String        @id @default(cuid())
+  userId      String        @map("user_id")
+  totalAmount Decimal       @map("total_amount") @db.Decimal(10, 2)
+  purchasedAt DateTime      @default(now()) @map("purchased_at")
   status      PaymentStatus @default(PENDING) // Status of the overall purchase
 
-  user         User           @relation(fields: [userId], references: [id], onDelete: Restrict)
-  items        PurchaseItem[]
-  payments     Payment[]
-  
+  user     User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items    PurchaseItem[]
+  payments Payment[]
+
   @@index([userId])
   @@map("purchases")
 }
 
 // An item within a purchase (e.g., a course or a bundle)
 model PurchaseItem {
-  id          String  @id @default(cuid())
-  purchaseId  String  @map("purchase_id")
-  purchasePrice Decimal @db.Decimal(10, 2) @map("purchase_price")
-  
+  id            String  @id @default(cuid())
+  purchaseId    String  @map("purchase_id")
+  purchasePrice Decimal @map("purchase_price") @db.Decimal(10, 2)
+
   // The item can be a course OR a bundle
-  courseId    String? @map("course_id")
-  bundleId    String? @map("bundle_id")
+  courseId String? @map("course_id")
+  bundleId String? @map("bundle_id")
 
   purchase Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
   course   Course?  @relation(fields: [courseId], references: [id])
   bundle   Bundle?  @relation(fields: [bundleId], references: [id])
-  
+
   @@map("purchase_items")
 }
 
@@ -292,12 +293,12 @@ model Payment {
   provider          String        @default("razorpay") // e.g., 'razorpay', 'stripe'
   providerPaymentId String        @unique @map("provider_payment_id")
   providerOrderId   String?       @map("provider_order_id")
-  signature         String?       // For verification (e.g., Razorpay signature)
+  signature         String? // For verification (e.g., Razorpay signature)
   createdAt         DateTime      @default(now()) @map("created_at")
   updatedAt         DateTime      @updatedAt @map("updated_at")
 
   purchase Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
-  
+
   @@index([purchaseId])
   @@map("payments")
 }
@@ -322,7 +323,7 @@ model Enrollment {
   enrolledAt      DateTime         @default(now()) @map("enrolled_at")
   completedAt     DateTime?        @map("completed_at")
   lastAccessedAt  DateTime?        @map("last_accessed_at")
-  progressPercent Decimal          @default(0) @db.Decimal(5, 2) @map("progress_percent")
+  progressPercent Decimal          @default(0) @map("progress_percent") @db.Decimal(5, 2)
   status          EnrollmentStatus @default(ACTIVE)
 
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -335,12 +336,12 @@ model Enrollment {
 }
 
 model LessonProgress {
-  id           String     @id @default(cuid())
-  enrollmentId String     @map("enrollment_id")
-  lessonId     String     @map("lesson_id")
-  completed    Boolean    @default(false)
-  completedAt  DateTime?  @map("completed_at")
-  timeSpentMin Int?       @map("time_spent_min")
+  id           String    @id @default(cuid())
+  enrollmentId String    @map("enrollment_id")
+  lessonId     String    @map("lesson_id")
+  completed    Boolean   @default(false)
+  completedAt  DateTime? @map("completed_at")
+  timeSpentMin Int?      @map("time_spent_min")
 
   enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
   lesson     Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
@@ -374,7 +375,6 @@ model Certificate {
   @@map("certificates")
 }
 
-
 // ========================================
 // REVIEWS & COMMUNITY
 // ========================================
@@ -383,13 +383,13 @@ model Review {
   id        String   @id @default(cuid())
   userId    String   @map("user_id")
   courseId  String   @map("course_id")
-  rating    Int      // 1-5 stars
+  rating    Int // 1-5 stars
   comment   String?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
   @@map("reviews")
@@ -403,7 +403,7 @@ model DiscussionThread {
   userId    String   @map("user_id")
   lessonId  String   @map("lesson_id")
   createdAt DateTime @default(now()) @map("created_at")
-  
+
   author User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   posts  DiscussionPost[]
@@ -413,40 +413,39 @@ model DiscussionThread {
 
 // A reply/post within a discussion thread
 model DiscussionPost {
-  id        String    @id @default(cuid())
-  content   String    @db.Text
-  userId    String    @map("user_id")
-  threadId  String    @map("thread_id")
-  parentId  String?   @map("parent_id") // For nested replies
-  createdAt DateTime  @default(now()) @map("created_at")
-  
-  author   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  thread   DiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  parent   DiscussionPost?  @relation("Replies", fields: [parentId], references: [id], onDelete: NoAction)
-  replies  DiscussionPost[] @relation("Replies")
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  userId    String   @map("user_id")
+  threadId  String   @map("thread_id")
+  parentId  String?  @map("parent_id") // For nested replies
+  createdAt DateTime @default(now()) @map("created_at")
+
+  author  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread  DiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  parent  DiscussionPost?  @relation("Replies", fields: [parentId], references: [id], onDelete: NoAction)
+  replies DiscussionPost[] @relation("Replies")
 
   @@map("discussion_posts")
 }
-
 
 // ========================================
 // ADMIN, ANALYTICS & NOTIFICATIONS
 // ========================================
 
 model AdminAction {
-  id          String           @id @default(cuid())
-  adminId     String           @map("admin_id")
+  id          String          @id @default(cuid())
+  adminId     String          @map("admin_id")
   action      AdminActionType
-  targetType  String           @map("target_type") // 'user', 'course', 'payment', etc.
-  targetId    String           @map("target_id")
+  targetType  String          @map("target_type") // 'user', 'course', 'payment', etc.
+  targetId    String          @map("target_id")
   description String?
-  metadata    Json?            // Additional data
-  
-  createdAt   DateTime         @default(now()) @map("created_at")
-  
+  metadata    Json? // Additional data
+
+  createdAt DateTime @default(now()) @map("created_at")
+
   // Relations
-  admin       User             @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  
+  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
   @@map("admin_actions")
 }
 
@@ -464,14 +463,14 @@ enum AdminActionType {
 
 // Analytics and metrics
 model Analytics {
-  id          String         @id @default(cuid())
-  date        DateTime       @db.Date
-  metric      AnalyticMetric
-  value       Decimal        @db.Decimal(15, 2)
-  metadata    Json?
-  
-  createdAt   DateTime       @default(now()) @map("created_at")
-  
+  id       String         @id @default(cuid())
+  date     DateTime       @db.Date
+  metric   AnalyticMetric
+  value    Decimal        @db.Decimal(15, 2)
+  metadata Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
   @@unique([date, metric])
   @@map("analytics")
 }
@@ -489,19 +488,19 @@ enum AnalyticMetric {
 
 // Notifications & Communication
 model Notification {
-  id        String             @id @default(cuid())
-  userId    String             @map("user_id")
-  title     String
-  message   String
-  type      NotificationType
-  read      Boolean            @default(false)
-  data      Json?              // Additional notification data
-  
-  createdAt DateTime           @default(now()) @map("created_at")
-  readAt    DateTime?          @map("read_at")
-  
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id      String           @id @default(cuid())
+  userId  String           @map("user_id")
+  title   String
+  message String
+  type    NotificationType
+  read    Boolean          @default(false)
+  data    Json? // Additional notification data
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  readAt    DateTime? @map("read_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("notifications")
 }
 

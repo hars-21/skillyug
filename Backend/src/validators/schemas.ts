@@ -87,10 +87,10 @@ export const createCourseSchema = z.object({
   courseName: z.string()
     .min(3, 'Course name must be at least 3 characters')
     .max(200, 'Course name must be less than 200 characters'),
-  token: z.string()
-    .min(3, 'Token must be at least 3 characters')
-    .max(50, 'Token must be less than 50 characters')
-    .regex(/^[a-zA-Z0-9_-]+$/, 'Token can only contain letters, numbers, underscores, and hyphens'),
+  token: z.number()
+    .min(0, 'Token cannot be negative')
+    .max(999999, 'Token is too high')
+    .default(0),
   price: z.number()
     .min(0, 'Price cannot be negative')
     .max(999999, 'Price is too high'),
@@ -109,21 +109,19 @@ export const createCourseSchema = z.object({
     .max(50, 'Category must be less than 50 characters'),
   difficulty: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED'])
     .default('BEGINNER'),
-  duration: z.number()
-    .min(1, 'Duration must be at least 1 minute')
-    .max(10000, 'Duration is too long')
+  durationHours: z.number()
+    .min(1, 'Duration must be at least 1 hour')
+    .max(1000, 'Duration is too long')
     .optional(),
   language: z.string()
     .min(2, 'Language must be at least 2 characters')
     .max(50, 'Language must be less than 50 characters')
     .default('English'),
-  prerequisites: z.array(z.string().max(200))
-    .max(10, 'Too many prerequisites')
-    .default([]),
-  learningPath: z.string()
-    .max(1000, 'Learning path must be less than 1000 characters')
+  isActive: z.boolean().default(true),
+  isFeatured: z.boolean().default(false),
+  learningPathId: z.string()
+    .max(100, 'Learning path ID must be less than 100 characters')
     .optional(),
-  featured: z.boolean().default(false),
 }).strict();
 
 export const updateCourseSchema = createCourseSchema.partial().strict();

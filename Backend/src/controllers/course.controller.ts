@@ -28,13 +28,24 @@ export class CourseController {
     try {
       const { page = 1, limit = 10, category, difficulty, featured, search } = req.query;
       
+      console.log('🔍 Controller debug:', {
+        queryParams: req.query,
+        parsedParams: { page, limit, category, difficulty, featured, search },
+        featuredCheck: {
+          featured,
+          'featured === "true"': featured === 'true',
+          'featured === "false"': featured === 'false',
+          result: featured === 'true' ? true : featured === 'false' ? false : undefined
+        }
+      });
+      
       const result = await courseService.getAllCourses(
         Number(page),
         Number(limit),
         {
           category: category as any,
           difficulty: difficulty as any,
-          featured: featured === 'true',
+          featured: featured === 'true' ? true : featured === 'false' ? false : undefined,
           search: search as string
         }
       );
@@ -130,11 +141,14 @@ export class CourseController {
         description: courseData.description,
         imageUrl: courseData.imageUrl,
         price: courseData.price,
+        token: courseData.token,
         category: courseData.category as any,
         difficulty: courseData.difficulty,
-        durationHours: courseData.duration,
+        durationHours: courseData.durationHours,
         language: courseData.language,
-        isFeatured: courseData.featured
+        isActive: courseData.isActive,
+        isFeatured: courseData.isFeatured,
+        learningPathId: courseData.learningPathId,
       });
       
       ResponseUtil.created(res, { course }, 'Course created successfully');
@@ -162,11 +176,14 @@ export class CourseController {
         description: updateData.description,
         imageUrl: updateData.imageUrl,
         price: updateData.price,
+        token: updateData.token,
         category: updateData.category as any,
         difficulty: updateData.difficulty,
-        durationHours: updateData.duration,
+        durationHours: updateData.durationHours,
         language: updateData.language,
-        isFeatured: updateData.featured
+        isActive: updateData.isActive,
+        isFeatured: updateData.isFeatured,
+        learningPathId: updateData.learningPathId,
       });
       
       ResponseUtil.success(res, { course }, 'Course updated successfully');

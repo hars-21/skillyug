@@ -9,13 +9,13 @@ import {
   Upload, 
   X,
   Plus,
-  Minus,
-  BookOpen,
   Users,
   Clock,
   Trophy,
   Target,
-  DollarSign
+  DollarSign,
+  BookOpen,
+  Minus
 } from 'lucide-react';
 import { adminCourseAPI, CreateCourseInput } from '@/utils/apiAdmin';
 
@@ -24,11 +24,8 @@ interface FormErrors {
 }
 
 interface ExtendedCourseInput extends CreateCourseInput {
-  duration?: string;
   benefits?: string[];
-  prerequisites?: string[];
   learningOutcomes?: string[];
-  instructor?: string;
   videoUrl?: string;
   thumbnailUrl?: string;
 }
@@ -38,15 +35,19 @@ export default function NewCoursePage() {
   const [formData, setFormData] = useState<ExtendedCourseInput>({
     courseName: '',
     description: '',
-    category: '',
-    difficulty: '',
+    imageUrl: '',
     price: 0,
-    featured: false,
-    duration: '',
-    benefits: [''],
-    prerequisites: [''],
-    learningOutcomes: [''],
+    token: 0,
+    category: '',
+    difficulty: 'BEGINNER',
+    durationHours: 0,
+    language: 'English',
+    isActive: true,
+    isFeatured: false,
+    learningPathId: '',
     instructor: 'SkillyUG Team',
+    benefits: [''],
+    learningOutcomes: [''],
     videoUrl: '',
     thumbnailUrl: ''
   });
@@ -55,32 +56,34 @@ export default function NewCoursePage() {
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+
+
   const categories = [
-    'programming',
-    'web-development',
-    'mobile-development', 
-    'data-science',
-    'artificial-intelligence',
-    'cloud-computing',
-    'cybersecurity',
-    'design',
-    'business',
-    'marketing',
-    'other'
+    'PROGRAMMING',
+    'WEB_DEVELOPMENT',
+    'MOBILE_DEVELOPMENT', 
+    'DATA_SCIENCE',
+    'ARTIFICIAL_INTELLIGENCE',
+    'CLOUD_COMPUTING',
+    'CYBERSECURITY',
+    'DESIGN',
+    'BUSINESS',
+    'MARKETING',
+    'OTHER'
   ];
 
-  const difficulties = ['beginner', 'intermediate', 'advanced'];
+  const difficulties = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
     if (!formData.courseName.trim()) {
-      newErrors.courseName = 'Course courseName is required';
+      newErrors.courseName = 'Course name is required';
     } else if (formData.courseName.length < 5) {
-      newErrors.courseName = 'Course courseName must be at least 5 characters';
+      newErrors.courseName = 'Course name must be at least 5 characters';
     }
 
-    if (!formData.description.trim()) {
+    if (!formData.description?.trim()) {
       newErrors.description = 'Course description is required';
     } else if (formData.description.length < 20) {
       newErrors.description = 'Description must be at least 20 characters';
@@ -98,8 +101,12 @@ export default function NewCoursePage() {
       newErrors.price = 'Price cannot be negative';
     }
 
-    if (!formData.duration?.trim()) {
-      newErrors.duration = 'Course duration is required';
+    if (formData.token !== undefined && formData.token < 0) {
+      newErrors.token = 'Token cannot be negative';
+    }
+
+    if (!formData.durationHours || formData.durationHours <= 0) {
+      newErrors.durationHours = 'Course duration is required and must be greater than 0';
     }
 
     if (!formData.instructor?.trim()) {
@@ -125,10 +132,17 @@ export default function NewCoursePage() {
       const cleanedData: CreateCourseInput = {
         courseName: formData.courseName,
         description: formData.description,
+        imageUrl: formData.imageUrl || 'https://via.placeholder.com/400x200',
+        price: formData.price,
+        token: formData.token,
         category: formData.category,
         difficulty: formData.difficulty,
-        price: formData.price,
-        featured: formData.featured
+        durationHours: formData.durationHours,
+        language: formData.language || 'English',
+        isActive: formData.isActive ?? true,
+        isFeatured: formData.isFeatured ?? false,
+        learningPathId: formData.learningPathId,
+        instructor: formData.instructor || 'SkillyUG Team',
       };
 
       const response = await adminCourseAPI.create(cleanedData);
@@ -159,24 +173,24 @@ export default function NewCoursePage() {
     }
   };
 
-  const addArrayItem = (field: 'benefits' | 'prerequisites' | 'learningOutcomes') => {
+  const addArrayItem = (field: 'benefits' | 'learningOutcomes') => {
     setFormData(prev => ({
       ...prev,
       [field]: [...(prev[field] || []), '']
     }));
   };
 
-  const removeArrayItem = (field: 'benefits' | 'prerequisites' | 'learningOutcomes', index: number) => {
+  const removeArrayItem = (field: 'benefits' | 'learningOutcomes', index: number) => {
     setFormData(prev => ({
       ...prev,
-      [field]: (prev[field] || []).filter((_, i) => i !== index)
+      [field]: (prev[field] || []).filter((_: string, i: number) => i !== index)
     }));
   };
 
-  const updateArrayItem = (field: 'benefits' | 'prerequisites' | 'learningOutcomes', index: number, value: string) => {
+  const updateArrayItem = (field: 'benefits' | 'learningOutcomes', index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: (prev[field] || []).map((item, i) => i === index ? value : item)
+      [field]: (prev[field] || []).map((item: string, i: number) => i === index ? value : item)
     }));
   };
 
@@ -263,7 +277,7 @@ export default function NewCoursePage() {
                     <p className="text-sm text-red-300 mt-1">{errors.description}</p>
                   )}
                   <p className="text-sm text-white/60 mt-1">
-                    {formData.description.length}/500 characters
+                    {(formData.description || '').length}/500 characters
                   </p>
                 </div>
 
@@ -322,28 +336,29 @@ export default function NewCoursePage() {
                   </div>
 
                   <div>
-                    <label htmlFor="duration" className="block text-sm font-medium text-white mb-2">
-                      Duration *
+                    <label htmlFor="durationHours" className="block text-sm font-medium text-white mb-2">
+                      Duration (Hours) *
                     </label>
                     <input
-                      type="text"
-                      id="duration"
-                      value={formData.duration}
-                      onChange={(e) => handleInputChange('duration', e.target.value)}
+                      type="number"
+                      id="durationHours"
+                      min="1"
+                      value={formData.durationHours || ''}
+                      onChange={(e) => handleInputChange('durationHours', parseInt(e.target.value) || 0)}
                       className={`w-full px-4 py-3 border rounded-lg bg-white/10 text-white placeholder-white/60 focus:ring-2 focus:ring-white/20 focus:border-transparent transition-colors ${
-                        errors.duration ? 'border-red-300' : 'border-white/20'
+                        errors.durationHours ? 'border-red-300' : 'border-white/20'
                       }`}
-                      placeholder="e.g., 22 Hours"
+                      placeholder="e.g., 22"
                       disabled={loading}
                     />
-                    {errors.duration && (
-                      <p className="text-sm text-red-300 mt-1">{errors.duration}</p>
+                    {errors.durationHours && (
+                      <p className="text-sm text-red-300 mt-1">{errors.durationHours}</p>
                     )}
                   </div>
                 </div>
 
-                {/* Price and Instructor */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Price, Token Price, Language, Instructor */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div>
                     <label htmlFor="price" className="block text-sm font-medium text-white mb-2">
                       Course Price (₹) *
@@ -370,6 +385,49 @@ export default function NewCoursePage() {
                   </div>
 
                   <div>
+                    <label htmlFor="token" className="block text-sm font-medium text-white mb-2">
+                      Token Price
+                    </label>
+                    <input
+                      type="number"
+                      id="token"
+                      min="0"
+                      value={formData.token || ''}
+                      onChange={(e) => handleInputChange('token', parseInt(e.target.value) || 0)}
+                      className={`w-full px-4 py-3 border rounded-lg bg-white/10 text-white placeholder-white/60 focus:ring-2 focus:ring-white/20 focus:border-transparent transition-colors ${
+                        errors.token ? 'border-red-300' : 'border-white/20'
+                      }`}
+                      placeholder="0"
+                      disabled={loading}
+                    />
+                    {errors.token && (
+                      <p className="text-sm text-red-300 mt-1">{errors.token}</p>
+                    )}
+                    <p className="text-sm text-white/60 mt-1">
+                      Number of tokens required for enrollment
+                    </p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="language" className="block text-sm font-medium text-white mb-2">
+                      Language
+                    </label>
+                    <select
+                      id="language"
+                      value={formData.language || 'English'}
+                      onChange={(e) => handleInputChange('language', e.target.value)}
+                      className="w-full px-4 py-3 border rounded-lg bg-white/10 text-white focus:ring-2 focus:ring-white/20 focus:border-transparent transition-colors border-white/20"
+                      disabled={loading}
+                    >
+                      <option value="English" className="text-gray-900">English</option>
+                      <option value="Hindi" className="text-gray-900">Hindi</option>
+                      <option value="Spanish" className="text-gray-900">Spanish</option>
+                      <option value="French" className="text-gray-900">French</option>
+                      <option value="German" className="text-gray-900">German</option>
+                    </select>
+                  </div>
+
+                  <div>
                     <label htmlFor="instructor" className="block text-sm font-medium text-white mb-2">
                       Instructor *
                     </label>
@@ -390,25 +448,67 @@ export default function NewCoursePage() {
                   </div>
                 </div>
 
-                {/* Featured Course */}
-                <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="featured"
-                      type="checkbox"
-                      checked={formData.featured}
-                      onChange={(e) => handleInputChange('featured', e.target.checked)}
-                      className="w-4 h-4 text-orange-600 bg-white/10 border-white/20 rounded focus:ring-orange-500 focus:ring-2"
-                      disabled={loading}
-                    />
+                {/* Image URL */}
+                <div>
+                  <label htmlFor="imageUrl" className="block text-sm font-medium text-white mb-2">
+                    Course Image URL
+                  </label>
+                  <input
+                    type="url"
+                    id="imageUrl"
+                    value={formData.imageUrl || ''}
+                    onChange={(e) => handleInputChange('imageUrl', e.target.value)}
+                    className="w-full px-4 py-3 border rounded-lg bg-white/10 text-white placeholder-white/60 focus:ring-2 focus:ring-white/20 focus:border-transparent transition-colors border-white/20"
+                    placeholder="https://example.com/course-image.jpg"
+                    disabled={loading}
+                  />
+                  <p className="text-sm text-white/60 mt-1">
+                    URL to the course thumbnail image
+                  </p>
+                </div>
+
+                {/* Course Status and Featured */}
+                <div className="flex flex-col sm:flex-row gap-6">
+                  <div className="flex items-start">
+                    <div className="flex items-center h-5">
+                      <input
+                        id="isActive"
+                        type="checkbox"
+                        checked={formData.isActive ?? true}
+                        onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                        className="w-4 h-4 text-orange-600 bg-white/10 border-white/20 rounded focus:ring-orange-500 focus:ring-2"
+                        disabled={loading}
+                      />
+                    </div>
+                    <div className="ml-3">
+                      <label htmlFor="isActive" className="text-sm font-medium text-white">
+                        Course is Active
+                      </label>
+                      <p className="text-sm text-white/60">
+                        Active courses are visible to students
+                      </p>
+                    </div>
                   </div>
-                  <div className="ml-3">
-                    <label htmlFor="featured" className="text-sm font-medium text-white">
-                      Mark as Featured Course
-                    </label>
-                    <p className="text-sm text-white/60">
-                      Featured courses will be highlighted on the homepage
-                    </p>
+
+                  <div className="flex items-start">
+                    <div className="flex items-center h-5">
+                      <input
+                        id="isFeatured"
+                        type="checkbox"
+                        checked={formData.isFeatured ?? false}
+                        onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
+                        className="w-4 h-4 text-orange-600 bg-white/10 border-white/20 rounded focus:ring-orange-500 focus:ring-2"
+                        disabled={loading}
+                      />
+                    </div>
+                    <div className="ml-3">
+                      <label htmlFor="isFeatured" className="text-sm font-medium text-white">
+                        Mark as Featured Course
+                      </label>
+                      <p className="text-sm text-white/60">
+                        Featured courses will be highlighted on the homepage
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -492,47 +592,6 @@ export default function NewCoursePage() {
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Benefit
-                </button>
-              </div>
-            </div>
-
-            {/* Prerequisites */}
-            <div className="rounded-lg shadow-sm border border-white/10 p-6" style={{background: '#051C7F'}}>
-              <div className="flex items-center mb-6">
-                <Users className="w-5 h-5 text-white mr-3" />
-                <h2 className="text-xl font-bold text-white">Prerequisites</h2>
-              </div>
-
-              <div className="space-y-4">
-                {(formData.prerequisites || []).map((prerequisite, index) => (
-                  <div key={index} className="flex items-center space-x-3">
-                    <input
-                      type="text"
-                      value={prerequisite}
-                      onChange={(e) => updateArrayItem('prerequisites', index, e.target.value)}
-                      className="flex-1 px-4 py-3 border rounded-lg bg-white/10 text-white placeholder-white/60 focus:ring-2 focus:ring-white/20 focus:border-transparent transition-colors border-white/20"
-                      placeholder="What should students know before taking this course?"
-                      disabled={loading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeArrayItem('prerequisites', index)}
-                      className="p-2 text-red-300 hover:text-red-500 transition-colors"
-                      disabled={loading}
-                    >
-                      <Minus className="w-5 h-5" />
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => addArrayItem('prerequisites')}
-                  className="flex items-center px-4 py-2 text-white rounded-lg transition-colors hover:opacity-80"
-                  style={{background: '#EB8216'}}
-                  disabled={loading}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Prerequisite
                 </button>
               </div>
             </div>

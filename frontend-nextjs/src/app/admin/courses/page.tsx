@@ -14,6 +14,7 @@ import {
   Users,
   DollarSign,
   TrendingUp,
+  Clock,
   MoreVertical,
   ChevronLeft,
   ChevronRight
@@ -68,58 +69,79 @@ export default function CoursesManagement() {
           const samplePythonCourses = [
             {
               id: 'python-beginner-001',
-              title: 'Python Beginner Course',
+              courseName: 'Python Beginner Course',
               description: 'Perfect for absolute beginners. Learn variables, loops, functions, data types with hands-on mini projects like Calculator and Quiz App.',
+              imageUrl: 'https://via.placeholder.com/400x200',
               price: 1299,
-              category: 'Programming',
-              difficulty: 'Beginner',
+              token: 20,
+              category: 'PROGRAMMING',
+              difficulty: 'BEGINNER',
+              durationHours: 22,
+              language: 'English',
+              isActive: true,
+              isFeatured: true,
               mentorId: 'mentor-skillyug-001',
               mentor: {
                 id: 'mentor-skillyug-001',
                 name: 'SkillyUG Team',
                 email: 'team@skillyug.com'
               },
-              featured: true,
               createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
               updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+              ratingAverage: 4.8,
+              reviewCount: 245,
               enrollmentCount: 1245,
               completionRate: 87
             },
             {
               id: 'python-bundle-002', 
-              title: 'Python Bundle (Beginner → Intermediate)',
+              courseName: 'Python Bundle (Beginner → Intermediate)',
               description: 'Upgrade your Python skills step by step. Learn file handling, exception handling, dictionaries, OOP basics with projects like Student Report Generator and Web Scraper.',
+              imageUrl: 'https://via.placeholder.com/400x200',
               price: 1899,
-              category: 'Programming',
-              difficulty: 'Intermediate',
+              token: 50,
+              category: 'PROGRAMMING',
+              difficulty: 'INTERMEDIATE',
+              durationHours: 50,
+              language: 'English',
+              isActive: true,
+              isFeatured: true,
               mentorId: 'mentor-skillyug-001',
               mentor: {
                 id: 'mentor-skillyug-001',
                 name: 'SkillyUG Team',
                 email: 'team@skillyug.com'
               },
-              featured: true,
               createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
               updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+              ratingAverage: 4.9,
+              reviewCount: 167,
               enrollmentCount: 892,
               completionRate: 91
             },
             {
               id: 'python-pro-003',
-              title: 'Python Pro Bundle (Beginner → Advanced)',
+              courseName: 'Python Pro Bundle (Beginner → Advanced)',
               description: 'Become job-ready with advanced Python. Learn Advanced OOP, decorators, generators, NumPy, Pandas, Matplotlib, Flask with projects like Blog Website, Data Analysis, Automation Scripts.',
+              imageUrl: 'https://via.placeholder.com/400x200',
               price: 2599,
-              category: 'Programming',
-              difficulty: 'Advanced',
+              token: 65,
+              category: 'PROGRAMMING',
+              difficulty: 'ADVANCED',
+              durationHours: 90,
+              language: 'English',
+              isActive: true,
+              isFeatured: true,
               mentorId: 'mentor-skillyug-001',
               mentor: {
                 id: 'mentor-skillyug-001',
                 name: 'SkillyUG Team',
                 email: 'team@skillyug.com'
               },
-              featured: true,
               createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
               updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+              ratingAverage: 4.9,
+              reviewCount: 98,
               enrollmentCount: 567,
               completionRate: 94
             }
@@ -140,58 +162,79 @@ export default function CoursesManagement() {
       const samplePythonCourses = [
         {
           id: 'python-beginner-001',
-          title: 'Python Beginner Course',
+          courseName: 'Python Beginner Course',
           description: 'Perfect for absolute beginners. Learn variables, loops, functions, data types with hands-on mini projects like Calculator and Quiz App.',
+          imageUrl: '',
           price: 1299,
-          category: 'Programming',
-          difficulty: 'Beginner',
+          tokenPrice: 20,
+          category: 'PROGRAMMING',
+          difficulty: 'BEGINNER',
+          durationHours: 22,
+          language: 'English',
+          isActive: true,
+          isFeatured: true,
           mentorId: 'mentor-skillyug-001',
           mentor: {
             id: 'mentor-skillyug-001',
             name: 'SkillyUG Team',
             email: 'team@skillyug.com'
           },
-          featured: true,
           createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
           updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          ratingAverage: 4.8,
+          reviewCount: 245,
           enrollmentCount: 1245,
           completionRate: 87
         },
         {
           id: 'python-bundle-002', 
-          title: 'Python Bundle (Beginner → Intermediate)',
+          courseName: 'Python Bundle (Beginner → Intermediate)',
           description: 'Upgrade your Python skills step by step. Learn file handling, exception handling, dictionaries, OOP basics with projects like Student Report Generator and Web Scraper.',
+          imageUrl: '',
           price: 1899,
-          category: 'Programming',
-          difficulty: 'Intermediate',
+          tokenPrice: 50,
+          category: 'PROGRAMMING',
+          difficulty: 'INTERMEDIATE',
+          durationHours: 50,
+          language: 'English',
+          isActive: true,
+          isFeatured: true,
           mentorId: 'mentor-skillyug-001',
           mentor: {
             id: 'mentor-skillyug-001',
             name: 'SkillyUG Team',
             email: 'team@skillyug.com'
           },
-          featured: true,
           createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
           updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          ratingAverage: 4.9,
+          reviewCount: 167,
           enrollmentCount: 892,
           completionRate: 91
         },
         {
           id: 'python-pro-003',
-          title: 'Python Pro Bundle (Beginner → Advanced)',
+          courseName: 'Python Pro Bundle (Beginner → Advanced)',
           description: 'Become job-ready with advanced Python. Learn Advanced OOP, decorators, generators, NumPy, Pandas, Matplotlib, Flask with projects like Blog Website, Data Analysis, Automation Scripts.',
+          imageUrl: '',
           price: 2599,
-          category: 'Programming',
-          difficulty: 'Advanced', 
+          tokenPrice: 65,
+          category: 'PROGRAMMING',
+          difficulty: 'ADVANCED',
+          durationHours: 90,
+          language: 'English',
+          isActive: true,
+          isFeatured: true,
           mentorId: 'mentor-skillyug-001',
           mentor: {
             id: 'mentor-skillyug-001',
             name: 'SkillyUG Team',
             email: 'team@skillyug.com'
           },
-          featured: true,
           createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
           updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          ratingAverage: 4.9,
+          reviewCount: 98,
           enrollmentCount: 567,
           completionRate: 94
         }
@@ -229,7 +272,7 @@ export default function CoursesManagement() {
       if (response.status === 'success') {
         setCourses(courses.map(course => 
           course.id === courseId 
-            ? { ...course, featured: !course.featured }
+            ? { ...course, isFeatured: !course.isFeatured }
             : course
         ));
       } else {
@@ -272,7 +315,7 @@ export default function CoursesManagement() {
           </div>
         </div>
         <div className="absolute top-2 right-2 flex gap-1">
-          {course.featured && (
+          {course.isFeatured && (
             <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full flex items-center">
               <Star className="w-3 h-3 mr-1" />
               Featured
@@ -283,7 +326,7 @@ export default function CoursesManagement() {
 
       <div className="p-4">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-white line-clamp-2 flex-1">{course.title}</h3>
+          <h3 className="font-semibold text-white line-clamp-2 flex-1">{course.courseName}</h3>
           <div className="relative ml-2">
             <button className="p-1 hover:bg-gray-100 rounded-full">
               <MoreVertical className="w-4 h-4 text-gray-500" />
@@ -303,6 +346,10 @@ export default function CoursesManagement() {
             {formatCurrency(course.price)}
           </div>
           <div className="flex items-center">
+            <Clock className="w-4 h-4 mr-1" />
+            {course.durationHours || 0}h
+          </div>
+          <div className="flex items-center">
             <TrendingUp className="w-4 h-4 mr-1" />
             {course.difficulty}
           </div>
@@ -312,6 +359,11 @@ export default function CoursesManagement() {
               {course.completionRate}% completion
             </div>
           )}
+        </div>
+
+        <div className="flex items-center justify-between text-xs text-white/50 mb-3">
+          <span>Rating: {course.ratingAverage}/5 ({course.reviewCount} reviews)</span>
+          <span>Language: {course.language}</span>
         </div>
 
         {course.mentor && (
@@ -354,14 +406,14 @@ export default function CoursesManagement() {
             <button
               onClick={() => handleToggleFeatured(course.id)}
               className={`p-2 rounded-lg transition-colors hover:opacity-80 ${
-                course.featured 
+                course.isFeatured 
                   ? 'text-white' 
                   : 'text-white/60'
               }`}
-              style={{background: course.featured ? '#FFD700' : '#6B7280'}}
-              title={course.featured ? 'Remove from Featured' : 'Add to Featured'}
+              style={{background: course.isFeatured ? '#FFD700' : '#6B7280'}}
+              title={course.isFeatured ? 'Remove from Featured' : 'Add to Featured'}
             >
-              {course.featured ? <Star className="w-4 h-4" /> : <StarOff className="w-4 h-4" />}
+              {course.isFeatured ? <Star className="w-4 h-4" /> : <StarOff className="w-4 h-4" />}
             </button>
             <button
               onClick={() => handleDeleteCourse(course.id)}

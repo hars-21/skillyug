@@ -173,41 +173,61 @@ export const ADMIN_API_ENDPOINTS = {
 // Course-related types for admin
 export interface AdminCourse {
   id: string;
-  title: string;
-  description: string;
+  courseName: string;
+  description?: string;
+  imageUrl: string;
+  price: number;
+  token?: number;
   category: string;
   difficulty: string;
-  price: number;
+  durationHours?: number;
+  language: string;
+  isActive: boolean;
+  isFeatured: boolean;
+  learningPathId?: string;
   mentorId: string;
   mentor?: {
     id: string;
     name: string;
     email: string;
   };
-  featured: boolean;
   createdAt: string;
   updatedAt: string;
+  ratingAverage: number;
+  reviewCount: number;
   enrollmentCount?: number;
   completionRate?: number;
 }
 
 export interface CreateCourseInput {
   courseName: string;
-  description: string;
-  category: string;
-  difficulty: string;
+  description?: string;
+  imageUrl: string;
   price: number;
-  mentorId?: string; // Optional for admin creating on behalf of mentor
-  featured?: boolean;
+  token?: number;
+  category: string;
+  difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  durationHours?: number;
+  language?: string;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  learningPathId?: string;
+  instructor: string;
 }
 
 export interface UpdateCourseInput {
-  title?: string;
+  courseName?: string;
   description?: string;
+  imageUrl?: string;
+  price?: number;
+  tokenPrice?: number;
   category?: string;
   difficulty?: string;
-  price?: number;
-  featured?: boolean;
+  durationHours?: number;
+  language?: string;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  learningPathId?: string;
 }
 
 export interface CourseAnalytics {

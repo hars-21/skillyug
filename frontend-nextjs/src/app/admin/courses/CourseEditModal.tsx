@@ -17,12 +17,12 @@ interface FormErrors {
 
 export default function CourseEditModal({ isOpen, onClose, onSuccess, course }: CourseEditModalProps) {
   const [formData, setFormData] = useState<UpdateCourseInput>({
-    title: course.title,
+    courseName: course.courseName,
     description: course.description,
     category: course.category,
     difficulty: course.difficulty,
     price: course.price,
-    featured: course.featured,
+    isFeatured: course.isFeatured,
   });
   
   const [errors, setErrors] = useState<FormErrors>({});
@@ -47,12 +47,12 @@ export default function CourseEditModal({ isOpen, onClose, onSuccess, course }: 
   // Reset form when course changes
   useEffect(() => {
     setFormData({
-      title: course.title,
+      courseName: course.courseName,
       description: course.description,
       category: course.category,
       difficulty: course.difficulty,
       price: course.price,
-      featured: course.featured,
+      isFeatured: course.isFeatured,
     });
     setErrors({});
     setSubmitError(null);
@@ -61,10 +61,10 @@ export default function CourseEditModal({ isOpen, onClose, onSuccess, course }: 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!formData.title?.trim()) {
-      newErrors.title = 'Course title is required';
-    } else if (formData.title.length < 5) {
-      newErrors.title = 'Course title must be at least 5 characters';
+    if (!formData.courseName?.trim()) {
+      newErrors.courseName = 'Course courseName is required';
+    } else if (formData.courseName.length < 5) {
+      newErrors.courseName = 'Course courseName must be at least 5 characters';
     }
 
     if (!formData.description?.trim()) {
@@ -170,24 +170,24 @@ export default function CourseEditModal({ isOpen, onClose, onSuccess, course }: 
             </div>
           )}
 
-          {/* Course Title */}
+          {/* Course courseName */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-              Course Title *
+            <label htmlFor="courseName" className="block text-sm font-medium text-gray-700 mb-2">
+              Course courseName *
             </label>
             <input
               type="text"
-              id="title"
-              value={formData.title || ''}
-              onChange={(e) => handleInputChange('title', e.target.value)}
+              id="courseName"
+              value={formData.courseName || ''}
+              onChange={(e) => handleInputChange('courseName', e.target.value)}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                errors.title ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                errors.courseName ? 'border-red-300 bg-red-50' : 'border-gray-300'
               }`}
-              placeholder="Enter course title"
+              placeholder="Enter course courseName"
               disabled={loading}
             />
-            {errors.title && (
-              <p className="text-sm text-red-600 mt-1">{errors.title}</p>
+            {errors.courseName && (
+              <p className="text-sm text-red-600 mt-1">{errors.courseName}</p>
             )}
           </div>
 
@@ -296,24 +296,24 @@ export default function CourseEditModal({ isOpen, onClose, onSuccess, course }: 
             </p>
           </div>
 
-          {/* Featured Course */}
+          {/* isFeatured Course */}
           <div className="flex items-start">
             <div className="flex items-center h-5">
               <input
-                id="featured"
+                id="isFeatured"
                 type="checkbox"
-                checked={formData.featured || false}
-                onChange={(e) => handleInputChange('featured', e.target.checked)}
+                checked={formData.isFeatured || false}
+                onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
                 className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                 disabled={loading}
               />
             </div>
             <div className="ml-3">
-              <label htmlFor="featured" className="text-sm font-medium text-gray-700">
-                Mark as Featured Course
+              <label htmlFor="isFeatured" className="text-sm font-medium text-gray-700">
+                Mark as isFeatured Course
               </label>
               <p className="text-sm text-gray-500">
-                Featured courses will be highlighted on the homepage
+                isFeatured courses will be highlighted on the homepage
               </p>
             </div>
           </div>
