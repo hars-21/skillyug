@@ -81,7 +81,7 @@ export class CourseController {
       
       const course = await courseService.getCourseById(id);
       
-      ResponseUtil.success(res, { course }, 'Course retrieved successfully');
+      ResponseUtil.success(res, course , 'Course retrieved successfully');
     } catch (error) {
       next(error);
     }

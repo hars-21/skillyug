@@ -16,3 +16,9 @@ applyTo: '**'
 #FFFFFF  - Text
 #051C7F - Cards Background
 #EB8216 - Buttons Background
+
+
+## Currency 
+
+- use INR currency for all monetary values.
+- use INR symbol (₹) for display.

@@ -23,7 +23,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { adminCourseAPI, AdminCourse, PaginatedAdminResponse } from '@/utils/apiAdmin';
 import CourseCreateModal from './CourseCreateModal';
-import CourseEditModal from './CourseEditModal';
 
 export default function CoursesManagement() {
   const [courses, setCourses] = useState<AdminCourse[]>([]);
@@ -36,8 +35,6 @@ export default function CoursesManagement() {
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<AdminCourse | null>(null);
 
   const itemsPerPage = 10;
 
@@ -380,7 +377,7 @@ export default function CoursesManagement() {
             <Link 
               href={`/admin/courses/${course.id}`}
               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              title="View/Edit Course"
+              title="View Course"
             >
               <Eye className="w-4 h-4" />
             </Link>
@@ -392,17 +389,6 @@ export default function CoursesManagement() {
             >
               <Edit3 className="w-4 h-4" />
             </Link>
-            <button
-              onClick={() => {
-                setSelectedCourse(course);
-                setShowEditModal(true);
-              }}
-              className="p-2 text-white rounded-lg transition-colors hover:opacity-80"
-              style={{background: '#EB8216'}}
-              title="Quick Edit"
-            >
-              <Edit3 className="w-4 h-4" />
-            </button>
             <button
               onClick={() => handleToggleFeatured(course.id)}
               className={`p-2 rounded-lg transition-colors hover:opacity-80 ${
@@ -616,23 +602,6 @@ export default function CoursesManagement() {
           setShowCreateModal(false);
         }}
       />
-
-      {/* Course Edit Modal */}
-      {selectedCourse && (
-        <CourseEditModal
-          isOpen={showEditModal}
-          onClose={() => {
-            setShowEditModal(false);
-            setSelectedCourse(null);
-          }}
-          onSuccess={() => {
-            loadCourses(); // Refresh the courses list
-            setShowEditModal(false);
-            setSelectedCourse(null);
-          }}
-          course={selectedCourse}
-        />
-      )}
     </div>
   );
 }
