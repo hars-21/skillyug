@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_RAZORPAY_KEY: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
   },
   images: {
-    domains: ['localhost', 'skillyug-2-0-backend.onrender.com'],
+    domains: ['localhost', 'skillyug-2-0-backend.onrender.com', 'asset.cloudinary.com'],
   },
   async rewrites() {
     return [

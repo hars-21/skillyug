@@ -14,10 +14,6 @@ import { createPaginationMeta } from '../utils/response';
  * Handles all course-related business logic
  */
 export class CourseService {
-
-  /**
-   * Get all courses with pagination and filtering
-   */
   async getAllCourses(
     page: number = 1,
     limit: number = 10,
@@ -67,21 +63,24 @@ export class CourseService {
       description?: string;
       imageUrl: string;
       price: number;
+      token?: number;
       category: Category;
       difficulty?: Difficulty;
       durationHours?: number;
       language?: string;
+      isActive?: boolean;
       isFeatured?: boolean;
+      learningPathId?: string;
     }
   ) {
     // Verify mentor exists and has correct user type
     const mentor = await userRepository.findById(mentorId);
     if (!mentor) {
-      throw new NotFoundError('Mentor');
+      throw new NotFoundError('User not found');
     }
 
-    if (mentor.userType !== 'MENTOR') {
-      throw new AuthorizationError('Only mentors can create courses');
+    if (mentor.userType !== 'MENTOR' && mentor.userType !== 'ADMIN') {
+      throw new AuthorizationError('Only mentors and admins can create courses');
     }
 
     // Validate course data
@@ -123,12 +122,14 @@ export class CourseService {
       description?: string;
       imageUrl?: string;
       price?: number;
+      token?: number;
       category?: Category;
       difficulty?: Difficulty;
       durationHours?: number;
       language?: string;
-      isFeatured?: boolean;
       isActive?: boolean;
+      isFeatured?: boolean;
+      learningPathId?: string;
     }
   ) {
     // Check if course exists
