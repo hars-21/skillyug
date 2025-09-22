@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S skillyug -u 1001
+  adduser -S skillyug -u 1001
 
 # Copy package files
 COPY package.json pnpm-lock.yaml* ./
@@ -24,8 +24,8 @@ COPY . .
 # Generate Prisma client
 RUN pnpm db:generate
 
-# Change ownership to nodejs user
-RUN chown -R skillyug:nodejs /app
+# Create dist directory and change ownership to skillyug user
+RUN mkdir -p dist && chown -R skillyug:nodejs /app
 
 # Switch to non-root user
 USER skillyug

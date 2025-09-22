@@ -64,8 +64,9 @@ app.use(helmet({
 
 // CORS configuration with multiple origins support
 const allowedOrigins = [
-  'http://localhost:3000',
+  'http://localhost:3000',        // For local development outside Docker
   'http://localhost:3001',
+  'http://frontend:3000',         // For Docker container communication
   'https://skillyug.com',
   'https://www.skillyug.com',
   process.env.FRONTEND_URL,

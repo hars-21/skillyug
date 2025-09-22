@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_RAZORPAY_KEY: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
   },
   images: {
-    domains: ['localhost', 'skillyug-2-0-backend.onrender.com'],
+    domains: ['localhost', 'skillyug-2-0-backend.onrender.com', 'asset.cloudinary.com'],
   },
   async rewrites() {
     return [
@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'}/api/:path*`,
+        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://backend:5000'}/api/:path*`,
       },
     ];
   },

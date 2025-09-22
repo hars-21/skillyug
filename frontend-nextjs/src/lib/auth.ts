@@ -65,9 +65,16 @@ export const signupSchema = baseUserSchema.extend({
   path: ["confirmPassword"],
 });
 
-// Get API URL from environment
+// Get API URL from environment - handle both client and server side
 const getApiUrl = () => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  // For server-side requests (inside Docker), use the internal service name
+  if (typeof window === 'undefined') {
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://backend:5000';
+    return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+  }
+  
+  // For client-side requests (browser), use the public URL
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
   return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
 };
 
