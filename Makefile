@@ -170,3 +170,32 @@ health: ## Check service health
 	@echo "Frontend: $$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 || echo 'DOWN')"
 	@echo "Backend: $$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/api/test || echo 'DOWN')"
 	@echo "Database: $$(docker exec skillyug-postgres$$([ "$(ENV)" = "dev" ] && echo "-dev" || echo "") pg_isready -U skillyug_user 2>/dev/null && echo 'UP' || echo 'DOWN')"
+	@echo "ChromaDB: $$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/api/v1/heartbeat || echo 'DOWN')"
+	@echo "Recommendation Engine: $$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8003/health || echo 'DOWN')"
+
+test-recommendations: ## Test recommendation engine
+	@echo "${BLUE}🧪 Testing Recommendation Engine${NC}"
+	@curl -X POST http://localhost:8003/api/recommendations \
+		-H "Content-Type: application/json" \
+		-d '{"user_query": "I want to learn Python for beginners", "max_results": 3}' \
+		| jq '.' || echo "${RED}❌ Recommendation engine not available${NC}"
+
+shell-recommendations: ## Open shell in recommendation engine container
+	@echo "${BLUE}🐚 Opening Recommendation Engine Shell${NC}"
+	@docker exec -it skillyug-recommendation-engine-dev sh
+
+logs-recommendations: ## View recommendation engine logs
+	@echo "${BLUE}📋 Recommendation Engine Logs${NC}"
+	@if [ "$(ENV)" = "prod" ]; then \
+		docker compose logs -f recommendation-engine; \
+	else \
+		docker compose -f docker-compose.dev.yml logs -f recommendation-engine; \
+	fi
+
+restart-recommendations: ## Restart recommendation engine service
+	@echo "${BLUE}🔄 Restarting Recommendation Engine${NC}"
+	@if [ "$(ENV)" = "prod" ]; then \
+		docker compose restart recommendation-engine; \
+	else \
+		docker compose -f docker-compose.dev.yml restart recommendation-engine; \
+	fi

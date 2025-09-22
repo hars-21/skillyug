@@ -38,6 +38,27 @@ services:
       timeout: 3s
       retries: 5
 
+  # ChromaDB for Development (Course Recommendations)
+  chromadb:
+    image: chromadb/chroma:0.4.15
+    container_name: skillyug-chromadb-dev
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_dev_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+      - ANONYMIZED_TELEMETRY=FALSE
+    networks:
+      - skillyug-dev-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # Backend Development Service with Hot Reload
   backend:
     build:
@@ -50,10 +71,13 @@ services:
       PORT: 5000
       DATABASE_URL: postgresql://skillyug_user:skillyug_dev_password@postgres:5432/skillyug_dev?schema=public
       REDIS_URL: redis://redis:6379
+      CHROMADB_URL: http://chromadb:8000
+      RECOMMENDATION_ENGINE_URL: http://recommendation-engine:8003
       JWT_SECRET: your-super-secret-jwt-key-for-development-min-32-chars
       AUTH_SECRET: your-super-secret-auth-key-for-development
       RAZORPAY_KEY: your_razorpay_key_here
       RAZORPAY_SECRET: your_razorpay_secret_here
+      HUGGINGFACE_API_KEY: ${HUGGINGFACE_API_KEY:-}
       FRONTEND_URL: http://localhost:3000
       # Email development settings
       EMAIL_HOST: smtp.mailtrap.io
@@ -75,6 +99,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      chromadb:
+        condition: service_healthy
     command: ["pnpm", "dev"]
 
   # Frontend Development Service with Hot Reload
@@ -92,6 +118,7 @@ services:
       NEXTAUTH_URL: http://localhost:3000
       NEXTAUTH_SECRET: your-super-secret-nextauth-key-for-development
       DATABASE_URL: postgresql://skillyug_user:skillyug_dev_password@postgres:5432/skillyug_dev?schema=public
+      RECOMMENDATION_ENGINE_URL: http://recommendation-engine:8003
     ports:
       - "3000:3000"
     volumes:
@@ -164,12 +191,55 @@ services:
         condition: service_healthy
     command: ["pnpm", "db:studio"]
 
+  # Course Recommendation Engine Service
+  recommendation-engine:
+    build:
+      context: ./recommendation-engine
+      dockerfile: Dockerfile
+    container_name: skillyug-recommendation-engine-dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 8003
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: 8000
+      CHROMA_COLLECTION_NAME: course_embeddings_dev
+      MODEL_CACHE_DIR: /app/models/cache
+      COURSE_CATALOG_PATH: /app/data/course-catalog.pdf
+      MAX_RECOMMENDATIONS: 5
+      MIN_SIMILARITY_THRESHOLD: 0.7
+      LOG_LEVEL: info
+      DEVICE: cpu
+      MAX_SEQUENCE_LENGTH: 512
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./recommendation-engine:/app
+      - /app/node_modules
+      - recommendation_models_cache:/app/models/cache
+      - ./recommendation-engine/data:/app/data
+    networks:
+      - skillyug-dev-network
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
 # Named volumes for development persistent data
 volumes:
   postgres_dev_data:
     name: skillyug_postgres_dev_data
   redis_dev_data:
     name: skillyug_redis_dev_data
+  chroma_dev_data:
+    name: skillyug_chroma_dev_data
+  recommendation_models_cache:
+    name: skillyug_recommendation_models_cache
 
 # Development network
 networks:

@@ -80,3 +80,31 @@ export const passwordResetRateLimit = rateLimit({
     });
   },
 });
+
+/**
+ * Generic rate limiter factory
+ * Creates a rate limiter with custom configuration
+ */
+export const rateLimiterMiddleware = (options: {
+  windowMs?: number;
+  max?: number;
+  message?: any;
+}) => {
+  return rateLimit({
+    windowMs: options.windowMs || 15 * 60 * 1000, // 15 minutes default
+    max: options.max || 100, // 100 requests default
+    message: options.message || {
+      error: 'Too many requests. Please try again later.',
+      rateLimitExceeded: true,
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req: Request, res: Response) => {
+      console.warn(`Rate limit exceeded from IP: ${req.ip}`);
+      res.status(429).json(options.message || {
+        error: 'Too many requests. Please try again later.',
+        rateLimitExceeded: true,
+      });
+    },
+  });
+};
