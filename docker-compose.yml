@@ -59,12 +59,14 @@ services:
     networks:
       - skillyug-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/api/v1/heartbeat"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/heartbeat').read()"]
       interval: 30s
       timeout: 10s
       retries: 3
     labels:
       - "traefik.enable=false"
+    # Add this to ensure numpy is properly installed
+    command: sh -c "pip install 'numpy<2' 'onnxruntime==1.16.1' 'chroma-hnswlib==0.7.3' 'chromadb==0.4.15' --force-reinstall && chroma run --path /chroma/chroma --host 0.0.0.0 --port 8000"
 
   # Backend API Service
   backend:
@@ -181,6 +183,37 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.rule=Host(`traefik.skillyug.local`)"
       - "traefik.http.routers.traefik.entrypoints=web"
+
+  # Recommendation Engine (FastAPI)
+  recommendation-engine:
+    build:
+      context: ./recommendation-engine-fastapi
+      dockerfile: Dockerfile
+    container_name: skillyug-recommendation-engine
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=8003
+      # Future: wire to ChromaDB inside the network
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+    ports:
+      - "8003:8003"
+    networks:
+      - skillyug-network
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.recommender.rule=Host(`reco.skillyug.local`)"
+      - "traefik.http.routers.recommender.entrypoints=web"
+      - "traefik.http.services.recommender.loadbalancer.server.port=8003"
 
   # Database Migration Service (one-time)
   migrate:

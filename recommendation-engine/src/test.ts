@@ -1,7 +1,7 @@
-import { ModelManager } from '../services/model.service.js';
-import { VectorStoreService } from '../services/vectorStore.service.js';
-import { CourseDataService } from '../services/courseData.service.js';
-import { RecommendationService } from '../services/recommendation.service.js';
+import { ModelManager } from './services/model.service.js';
+import { VectorStoreService } from './services/vectorStore.service.js';
+import { CourseDataService } from './services/courseData.service.js';
+import { RecommendationService } from './services/recommendation.service.js';
 
 async function runTest() {
   console.log('🧪 Starting Recommendation Engine Test...\n');

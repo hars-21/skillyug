@@ -1,9 +1,19 @@
-FROM node:18-alpine
+FROM node:18
 
 WORKDIR /app
 
-# Install Python and dependencies for model downloads
-RUN apk add --no-cache python3 py3-pip
+# Install dependencies for Sharp, ONNX Runtime, and Python
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    libssl-dev \
+    curl \
+    build-essential \
+    libvips-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Sharp to use pre-built binaries
+ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 
 # Copy package files
 COPY package*.json ./
@@ -11,6 +21,8 @@ COPY tsconfig.json ./
 
 # Install dependencies
 RUN npm ci
+# Rebuild Sharp for the current platform
+RUN npm rebuild sharp --platform=linux --arch=x64
 
 # Copy source code
 COPY src/ ./src/
