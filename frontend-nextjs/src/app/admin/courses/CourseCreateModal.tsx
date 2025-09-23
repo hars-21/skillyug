@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Upload, AlertCircle } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import { adminCourseAPI, CreateCourseInput } from '@/utils/apiAdmin';
 
 interface CourseCreateModalProps {
@@ -16,12 +16,13 @@ interface FormErrors {
 
 export default function CourseCreateModal({ isOpen, onClose, onSuccess }: CourseCreateModalProps) {
   const [formData, setFormData] = useState<CreateCourseInput>({
-    title: '',
+    courseName: '',
     description: '',
     category: '',
-    difficulty: '',
+    difficulty: 'BEGINNER',
     price: 0,
-    featured: false,
+    imageUrl: '',
+    instructor: '',
   });
   
   const [errors, setErrors] = useState<FormErrors>({});
@@ -41,20 +42,20 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
     'other'
   ];
 
-  const difficulties = ['beginner', 'intermediate', 'advanced'];
+  const difficulties = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!formData.title.trim()) {
+    if (!formData.courseName.trim()) {
       newErrors.title = 'Course title is required';
-    } else if (formData.title.length < 5) {
+    } else if (formData.courseName.length < 5) {
       newErrors.title = 'Course title must be at least 5 characters';
     }
 
-    if (!formData.description.trim()) {
+    if (!formData.description?.trim()) {
       newErrors.description = 'Course description is required';
-    } else if (formData.description.length < 20) {
+    } else if (formData.description && formData.description.length < 20) {
       newErrors.description = 'Description must be at least 20 characters';
     }
 
@@ -64,6 +65,14 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
 
     if (!formData.difficulty) {
       newErrors.difficulty = 'Please select a difficulty level';
+    }
+
+    if (!formData.imageUrl.trim()) {
+      newErrors.imageUrl = 'Image URL is required';
+    }
+
+    if (!formData.instructor.trim()) {
+      newErrors.instructor = 'Instructor name is required';
     }
 
     if (formData.price < 0) {
@@ -104,12 +113,13 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
   const handleClose = () => {
     if (!loading) {
       setFormData({
-        title: '',
+        courseName: '',
         description: '',
         category: '',
-        difficulty: '',
+        difficulty: 'BEGINNER',
         price: 0,
-        featured: false,
+        imageUrl: '',
+        instructor: '',
       });
       setErrors({});
       setSubmitError(null);
@@ -117,7 +127,7 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
     }
   };
 
-  const handleInputChange = (field: keyof CreateCourseInput, value: any) => {
+  const handleInputChange = (field: keyof CreateCourseInput, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error for this field when user starts typing
@@ -162,14 +172,14 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
 
           {/* Course Title */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="courseName" className="block text-sm font-medium text-gray-700 mb-2">
               Course Title *
             </label>
             <input
               type="text"
-              id="title"
-              value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
+              id="courseName"
+              value={formData.courseName}
+              onChange={(e) => handleInputChange('courseName', e.target.value)}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                 errors.title ? 'border-red-300 bg-red-50' : 'border-gray-300'
               }`}
@@ -189,7 +199,7 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
             <textarea
               id="description"
               rows={4}
-              value={formData.description}
+              value={formData.description || ''}
               onChange={(e) => handleInputChange('description', e.target.value)}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none ${
                 errors.description ? 'border-red-300 bg-red-50' : 'border-gray-300'
@@ -201,7 +211,7 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
               <p className="text-sm text-red-600 mt-1">{errors.description}</p>
             )}
             <p className="text-sm text-gray-500 mt-1">
-              {formData.description.length}/500 characters
+              {(formData.description || '').length}/500 characters
             </p>
           </div>
 
@@ -286,20 +296,62 @@ export default function CourseCreateModal({ isOpen, onClose, onSuccess }: Course
             </p>
           </div>
 
+          {/* Image URL */}
+          <div>
+            <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-2">
+              Course Image URL *
+            </label>
+            <input
+              type="url"
+              id="imageUrl"
+              value={formData.imageUrl}
+              onChange={(e) => handleInputChange('imageUrl', e.target.value)}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                errors.imageUrl ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+              placeholder="https://example.com/course-image.jpg"
+              disabled={loading}
+            />
+            {errors.imageUrl && (
+              <p className="text-sm text-red-600 mt-1">{errors.imageUrl}</p>
+            )}
+          </div>
+
+          {/* Instructor */}
+          <div>
+            <label htmlFor="instructor" className="block text-sm font-medium text-gray-700 mb-2">
+              Instructor Name *
+            </label>
+            <input
+              type="text"
+              id="instructor"
+              value={formData.instructor}
+              onChange={(e) => handleInputChange('instructor', e.target.value)}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                errors.instructor ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+              placeholder="Enter instructor name"
+              disabled={loading}
+            />
+            {errors.instructor && (
+              <p className="text-sm text-red-600 mt-1">{errors.instructor}</p>
+            )}
+          </div>
+
           {/* Featured Course */}
           <div className="flex items-start">
             <div className="flex items-center h-5">
               <input
-                id="featured"
+                id="isFeatured"
                 type="checkbox"
-                checked={formData.featured}
-                onChange={(e) => handleInputChange('featured', e.target.checked)}
+                checked={formData.isFeatured || false}
+                onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
                 className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                 disabled={loading}
               />
             </div>
             <div className="ml-3">
-              <label htmlFor="featured" className="text-sm font-medium text-gray-700">
+              <label htmlFor="isFeatured" className="text-sm font-medium text-gray-700">
                 Mark as Featured Course
               </label>
               <p className="text-sm text-gray-500">

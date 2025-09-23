@@ -8,7 +8,12 @@ module.exports = [
       'src/generated/**/*',
       'dist/**/*',
       'node_modules/**/*',
-      'prisma/**/*'
+      'prisma/**/*',
+      'scripts/**/*',
+      'tests/**/*',
+      '**/test-*.ts',
+      '**/*.test.ts',
+      '**/*.spec.ts'
     ],
   },
   {

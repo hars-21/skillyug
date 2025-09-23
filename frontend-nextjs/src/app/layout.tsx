@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Reddit_Sans, Montserrat } from "next/font/google";
+import { Red_Hat_Display, Montserrat } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "../hooks/AuthContext";
 import { Toaster } from "react-hot-toast";
-import { SessionProvider } from "next-auth/react";
+import SessionProviderWrapper from "@/components/SessionProvider";
 
-const redditSans = Reddit_Sans({
-  variable: "--font-reddit-sans",
+const redHatDisplay = Red_Hat_Display({
+  variable: "--font-red-hat-display",
   subsets: ["latin"],
   display: "swap",
 });
@@ -30,14 +30,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${redditSans.variable} ${montserrat.variable} antialiased`}
+        className={`${redHatDisplay.variable} ${montserrat.variable} antialiased`}
       >
-        <SessionProvider>
+        <SessionProviderWrapper>
           <AuthProvider>
             <Toaster />
             {children}
           </AuthProvider>
-        </SessionProvider>
+        </SessionProviderWrapper>
       </body>
     </html>
   );

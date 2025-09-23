@@ -13,6 +13,7 @@ import courseRouter from "./router/course.router"
 import paymentRouter from "./router/payment.router"
 import purchaseRouter from "./router/purchase.router"
 import userRouter from "./router/userRouter"
+import recommendationRouter from "./router/recommendation.router"
 
 // Import new error handling middleware
 import { globalErrorHandler } from "./middleware/errorHandler.middleware"
@@ -62,23 +63,45 @@ app.use(helmet({
   },
 }));
 
-// CORS configuration with multiple origins support
-const allowedOrigins = [
-  'http://localhost:3000',        // For local development outside Docker
-  'http://localhost:3001',
-  'http://frontend:3000',         // For Docker container communication
-  'https://skillyug.com',
-  'https://www.skillyug.com',
-  process.env.FRONTEND_URL,
-  process.env.NEXT_PUBLIC_FRONTEND_URL,
-].filter(Boolean); // Remove undefined values
+// CORS configuration with secure origin handling
+const getAllowedOrigins = (): string[] => {
+  const baseOrigins = [
+    'http://localhost:3000',        // Local development
+    'http://frontend:3000',         // Docker container communication
+  ];
+  
+  // Add production origins only in production
+  if (process.env.NODE_ENV === 'production') {
+    baseOrigins.push(
+      'https://skillyug.com',
+      'https://www.skillyug.com'
+    );
+  }
+  
+  // Add environment-specific origins if defined
+  if (process.env.FRONTEND_URL) {
+    baseOrigins.push(process.env.FRONTEND_URL);
+  }
+  
+  return baseOrigins.filter(Boolean);
+};
+
+const allowedOrigins = getAllowedOrigins();
 
 const corsOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    // In development, allow requests with no origin (like Postman, curl)
+    if (!origin && process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
     
-    if (allowedOrigins.includes(origin)) {
+    // In production, require origin header
+    if (!origin && process.env.NODE_ENV === 'production') {
+      console.warn('CORS blocked: No origin header in production');
+      return callback(new Error('Origin header required'), false);
+    }
+    
+    if (origin && allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       console.warn(`CORS blocked origin: ${origin}`);
@@ -88,7 +111,7 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'X-User-ID', 'X-User-Type'],
   exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
   maxAge: 86400, // 24 hours
 };
@@ -112,12 +135,30 @@ const generalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // Limit auth attempts to 10 per 15 minutes
+    max: 10, // Limit auth attempts to 10 per 15 minutes (fixed from 1000)
     standardHeaders: true,
     legacyHeaders: false,
     message: {
         error: 'Too many authentication attempts, please try again after 15 minutes',
         code: 'AUTH_RATE_LIMIT_EXCEEDED'
+    },
+    // Skip rate limiting for successful requests
+    skipSuccessfulRequests: true,
+    // Use IP + user agent for more accurate limiting
+    keyGenerator: (req) => {
+        return `${req.ip}-${req.get('User-Agent')?.substring(0, 50) || 'unknown'}`;
+    }
+});
+
+// Stricter rate limiting for sensitive operations
+const strictLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, // Only 5 attempts per hour for password reset, etc.
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        error: 'Too many sensitive operation attempts, please try again after 1 hour',
+        code: 'STRICT_RATE_LIMIT_EXCEEDED'
     }
 });
 
@@ -168,6 +209,7 @@ app.use("/api/courses", courseRouter);
 app.use("/api/payments", paymentRouter);
 app.use("/api/purchases", purchaseRouter);
 app.use("/api/users", userRouter);
+app.use("/api/recommendations", recommendationRouter);
 
 // --- 404 Handler for unmatched routes ---
 app.use((req: Request, res: Response, next: NextFunction) => {
