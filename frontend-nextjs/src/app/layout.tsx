@@ -3,7 +3,7 @@ import { Red_Hat_Display, Montserrat } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "../hooks/AuthContext";
 import { Toaster } from "react-hot-toast";
-import { SessionProvider } from "next-auth/react";
+import SessionProviderWrapper from "@/components/SessionProvider";
 
 const redHatDisplay = Red_Hat_Display({
   variable: "--font-red-hat-display",
@@ -32,12 +32,12 @@ export default function RootLayout({
       <body
         className={`${redHatDisplay.variable} ${montserrat.variable} antialiased`}
       >
-        <SessionProvider>
+        <SessionProviderWrapper>
           <AuthProvider>
             <Toaster />
             {children}
           </AuthProvider>
-        </SessionProvider>
+        </SessionProviderWrapper>
       </body>
     </html>
   );

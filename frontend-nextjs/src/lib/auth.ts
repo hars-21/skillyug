@@ -1,5 +1,5 @@
 import NextAuth, { DefaultSession } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import axios from 'axios';
 
@@ -80,7 +80,7 @@ const getApiUrl = () => {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    CredentialsProvider({
+    Credentials({
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -406,9 +406,6 @@ export async function sendVerificationOtp(email: string) {
 export async function getServerSession() {
   return await auth();
 }
-
-// Client-side session hook
-export { useSession } from "next-auth/react";
 
 // Type for session parameter in helper functions
 type SessionType = {
