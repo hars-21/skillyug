@@ -8,10 +8,8 @@ import {
   DollarSign, 
   Eye, 
   Star,
-  Calendar,
   Activity,
   PlusCircle,
-  Edit3,
   BarChart3
 } from 'lucide-react';
 import Link from 'next/link';
@@ -189,7 +187,7 @@ export default function AdminDashboard() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-          <p className="text-white/80 mt-1">Welcome back! Here's what's happening with your platform.</p>
+          <p className="text-white/80 mt-1">Welcome back! Here&apos;s what&apos;s happening with your platform.</p>
         </div>
         <div className="flex gap-3">
           <Link 

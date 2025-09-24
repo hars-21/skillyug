@@ -52,8 +52,8 @@ export default function ResetPasswordPage() {
     try {
       await resetPassword(token, data.password, data.confirmPassword);
       setIsSuccess(true);
-    } catch (err: any) {
-      setError(err.message || 'Failed to reset password. The token may be invalid or expired.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to reset password. The token may be invalid or expired.');
     } finally {
       setIsSubmitting(false);
     }

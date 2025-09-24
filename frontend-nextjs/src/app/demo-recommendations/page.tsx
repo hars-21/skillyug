@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Search, Star, TrendingUp, Zap, DollarSign, Clock } from 'lucide-react'
+import { Loader2, Search, Star, TrendingUp, Zap, DollarSign } from 'lucide-react'
 
 interface Course {
   id: string
@@ -142,7 +142,7 @@ export default function DemoRecommendations() {
             Query Input
           </CardTitle>
           <CardDescription>
-            Describe what course you're looking for in natural language
+            Describe what course you&apos;re looking for in natural language
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -277,7 +277,7 @@ export default function DemoRecommendations() {
             </div>
 
             <div className="grid gap-4">
-              {result.recommendations.map((rec, index) => (
+              {result.recommendations.map((rec) => (
                 <Card key={rec.course.id} className="relative">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">

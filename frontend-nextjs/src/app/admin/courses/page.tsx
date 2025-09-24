@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Plus, 
   Search, 
@@ -20,8 +20,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { adminCourseAPI, AdminCourse, PaginatedAdminResponse } from '@/utils/apiAdmin';
+import { adminCourseAPI, AdminCourse } from '@/utils/apiAdmin';
 import CourseCreateModal from './CourseCreateModal';
 
 export default function CoursesManagement() {
@@ -38,16 +37,12 @@ export default function CoursesManagement() {
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    loadCourses();
-  }, [currentPage, searchTerm, selectedCategory, selectedStatus]);
-
-  const loadCourses = async () => {
+  const loadCourses = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const params: any = {
+      const params: Record<string, string | number> = {
         page: currentPage,
         limit: itemsPerPage,
       };
@@ -243,7 +238,11 @@ export default function CoursesManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, selectedCategory, selectedStatus]);
+
+  useEffect(() => {
+    loadCourses();
+  }, [loadCourses]);
 
   const handleDeleteCourse = async (courseId: string) => {
     if (!confirm('Are you sure you want to delete this course? This action cannot be undone.')) {

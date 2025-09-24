@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Edit3, Calendar, DollarSign, Users, Star, Book, Clock, Target, User } from 'lucide-react';
@@ -9,7 +9,6 @@ import { adminCourseAPI, AdminCourse } from '@/utils/apiAdmin';
 
 export default function CourseViewPage() {
   const params = useParams();
-  const router = useRouter();
   const courseId = params?.id as string;
 
   const [course, setCourse] = useState<AdminCourse | null>(null);

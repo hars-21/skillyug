@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, AlertCircle, Eye } from 'lucide-react';
 import { adminCourseAPI, AdminCourse, UpdateCourseInput } from '@/utils/apiAdmin';
@@ -12,6 +12,7 @@ interface FormErrors {
 
 export default function CourseEditPage() {
   const params = useParams();
+  const router = useRouter();
   const courseId = params?.id as string;
 
   const [course, setCourse] = useState<AdminCourse | null>(null);
@@ -110,50 +111,30 @@ export default function CourseEditPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setSaving(true);
     setSubmitError(null);
-    setSuccessMessage(null);
-
     try {
       const response = await adminCourseAPI.update(courseId, formData);
       
       if (response.status === 'success') {
         setSuccessMessage('Course updated successfully!');
-        // Update the course state with the new data
-        if (response.data) {
-          setCourse(response.data);
-        }
-        // Auto-hide success message after 3 seconds
-        setTimeout(() => setSuccessMessage(null), 3000);
+        setTimeout(() => {
+          router.push('/admin/courses');
+        }, 2000);
       } else {
         setSubmitError(response.message || 'Failed to update course');
       }
-    } catch (error: unknown) {
-      console.error('Update error:', error);
-      
-      if (error && typeof error === 'object' && 'response' in error) {
-        const apiError = error as { response?: { data?: { message?: string } } };
-        if (apiError.response?.data?.message) {
-          setSubmitError(apiError.response.data.message);
-        } else {
-          setSubmitError('An unexpected error occurred while updating the course');
-        }
-      } else if (error instanceof Error) {
-        setSubmitError(error.message);
-      } else {
-        setSubmitError('An unexpected error occurred while updating the course');
-      }
+    } catch (error) {
+      console.error('Error updating course:', error);
+      setSubmitError('Failed to update course. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleInputChange = (field: keyof UpdateCourseInput, value: any) => {
+  const handleInputChange = (field: keyof UpdateCourseInput, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error for this field when user starts typing
