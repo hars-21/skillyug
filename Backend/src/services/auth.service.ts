@@ -368,7 +368,7 @@ export class AuthService {
    * Change password (for authenticated users)
    */
   async changePassword(userId: string, currentPassword: string, newPassword: string) {
-    const user = await userRepository.findByEmailWithPassword('');
+    const _user = await userRepository.findByEmailWithPassword('');
     const userById = await userRepository.findById(userId);
     
     if (!userById) {
@@ -415,7 +415,7 @@ export class AuthService {
   /**
    * Refresh token (if implementing refresh token strategy)
    */
-  async refreshToken(refreshToken: string) {
+  async refreshToken(_refreshToken: string) {
     // Implement refresh token logic if needed
     // This is a placeholder for future implementation
     throw new BusinessLogicError('Refresh token functionality not implemented');
@@ -424,7 +424,7 @@ export class AuthService {
   /**
    * Logout user (if implementing token blacklisting)
    */
-  async logout(token: string) {
+  async logout(_token: string) {
     // Implement token blacklisting if needed
     // This is a placeholder for future implementation
     return { message: 'Logged out successfully' };

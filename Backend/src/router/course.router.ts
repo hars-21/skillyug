@@ -5,7 +5,7 @@ import { validateRequest } from '../middleware/validation.middleware';
 import { 
   createCourseSchema,
   updateCourseSchema,
-  paginationSchema
+  paginationSchema as _paginationSchema
 } from '../validators/schemas';
 
 export const courseRouter = Router();

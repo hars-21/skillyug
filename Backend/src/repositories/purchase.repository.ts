@@ -1,4 +1,4 @@
-import { Prisma, Purchase, PurchaseItem } from '@prisma/client';
+import { Prisma, Purchase, PurchaseItem, Category, Difficulty, PaymentStatus } from '@prisma/client';
 import prisma from '../utils/prisma';
 import { DatabaseError, NotFoundError } from '../utils/errors';
 
@@ -13,8 +13,8 @@ type PurchaseWithRelations = Purchase & {
       id: string;
       courseName: string;
       imageUrl: string;
-      category: any;
-      difficulty: any;
+      category: Category;
+      difficulty: Difficulty;
     } | null;
     bundle?: {
       id: string;
@@ -29,8 +29,8 @@ type PurchaseWithRelations = Purchase & {
   } | null;
   payments?: Array<{
     id: string;
-    status: any;
-    amount: any;
+    status: PaymentStatus;
+    amount: Prisma.Decimal;
     providerPaymentId: string;
     createdAt: Date;
   }>;

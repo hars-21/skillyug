@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, FormEvent } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Search, Star, TrendingUp, Zap, DollarSign } from 'lucide-react'
+import { Loader2, Search, Star, TrendingUp, Zap, DollarSign } from 'lucide-react';
+import { getRecommendations, type RecommendationResponse as RecResponse } from '@/services/recommendationService'
 
 interface Course {
   id: string
@@ -52,10 +53,9 @@ const UI_CHIPS = [
 export default function DemoRecommendations() {
   const [query, setQuery] = useState('')
   const [selectedChips, setSelectedChips] = useState<string[]>([])
-  const [maxResults, setMaxResults] = useState(5)
-  const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<RecommendationResponse | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [recommendations, setRecommendations] = useState<RecResponse | null>(null)
 
   const toggleChip = (chip: string) => {
     setSelectedChips(prev => 
@@ -65,45 +65,21 @@ export default function DemoRecommendations() {
     )
   }
 
-  const handleSearch = async () => {
-    if (!query.trim()) {
-      setError('Please enter a query')
-      return
-    }
-
-    setLoading(true)
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!query.trim()) return
+    
+    setIsLoading(true)
     setError(null)
-    setResult(null)
-
+    
     try {
-      const response = await fetch('/api/recommendations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_query: query.trim(),
-          ui_chips: selectedChips,
-          max_results: maxResults
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      
-      if (data.success) {
-        setResult(data.data)
-      } else {
-        setError(data.error || 'Failed to get recommendations')
-      }
+      const data = await getRecommendations(query, selectedChips)
+      setRecommendations(data)
     } catch (err) {
-      console.error('Recommendation error:', err)
-      setError(err instanceof Error ? err.message : 'Failed to connect to recommendation engine')
+      console.error('Failed to fetch recommendations:', err)
+      setError('Failed to fetch recommendations. Please try again.')
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
@@ -132,6 +108,11 @@ export default function DemoRecommendations() {
         <p className="text-muted-foreground text-lg">
           Test our AI-powered course recommendations with natural language queries
         </p>
+        {error && (
+          <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
       </div>
 
       {/* Input Section */}
@@ -139,7 +120,7 @@ export default function DemoRecommendations() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Search className="h-5 w-5" />
-            Query Input
+            Search for Courses
           </CardTitle>
           <CardDescription>
             Describe what course you&apos;re looking for in natural language
@@ -153,7 +134,7 @@ export default function DemoRecommendations() {
               placeholder="e.g., I want to learn Python for beginners under 1500 rupees with certification"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !loading && handleSearch()}
+              onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleSubmit(e)}
               className="mt-1"
             />
           </div>
@@ -175,25 +156,12 @@ export default function DemoRecommendations() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div>
-              <Label htmlFor="maxResults">Max Results</Label>
-              <Input
-                id="maxResults"
-                type="number"
-                min={1}
-                max={10}
-                value={maxResults}
-                onChange={(e) => setMaxResults(parseInt(e.target.value) || 5)}
-                className="w-20 mt-1"
-              />
-            </div>
-            
             <Button 
-              onClick={handleSearch} 
-              disabled={loading || !query.trim()}
+              onClick={handleSubmit} 
+              disabled={isLoading || !query.trim()}
               className="mt-6"
             >
-              {loading ? (
+              {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Searching...
@@ -209,19 +177,8 @@ export default function DemoRecommendations() {
         </CardContent>
       </Card>
 
-      {/* Error Display */}
-      {error && (
-        <Card className="mb-6 border-red-200 bg-red-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-red-600">
-              <div className="text-sm font-medium">Error: {error}</div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Results Section */}
-      {result && (
+      {recommendations && (
         <div className="space-y-6">
           {/* Intent Parsing Results */}
           <Card>
@@ -236,30 +193,30 @@ export default function DemoRecommendations() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Intent</Label>
-                  <p className="text-sm text-muted-foreground">{result.intent.intent}</p>
+                  <p className="text-sm text-muted-foreground">{recommendations.intent.intent}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Keywords</Label>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {result.intent.keywords.map((keyword) => (
+                    {recommendations.intent.keywords.map((keyword) => (
                       <Badge key={keyword} variant="secondary" className="text-xs">
                         {keyword}
                       </Badge>
                     ))}
                   </div>
                 </div>
-                {result.intent.level && (
+                {recommendations.intent.level && (
                   <div>
                     <Label className="text-sm font-medium">Level</Label>
-                    <p className="text-sm text-muted-foreground">{result.intent.level}</p>
+                    <p className="text-sm text-muted-foreground">{recommendations.intent.level}</p>
                   </div>
                 )}
-                {result.intent.price_range && (
+                {recommendations.intent.price_range && (
                   <div>
                     <Label className="text-sm font-medium">Price Range</Label>
                     <p className="text-sm text-muted-foreground">
-                      {result.intent.price_range.min && `Min: ₹${result.intent.price_range.min}`}
-                      {result.intent.price_range.max && `Max: ₹${result.intent.price_range.max}`}
+                      {recommendations.intent.price_range.min && `Min: ₹${recommendations.intent.price_range.min}`}
+                      {recommendations.intent.price_range.max && `Max: ₹${recommendations.intent.price_range.max}`}
                     </p>
                   </div>
                 )}
@@ -271,13 +228,13 @@ export default function DemoRecommendations() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-semibold">
-                Recommendations ({result.total_results})
+                Recommendations ({recommendations.total_results})
               </h2>
-              <p className="text-muted-foreground">{result.message}</p>
+              <p className="text-muted-foreground">{recommendations.message}</p>
             </div>
 
             <div className="grid gap-4">
-              {result.recommendations.map((rec) => (
+              {recommendations.recommendations.map((rec) => (
                 <Card key={rec.course.id} className="relative">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
@@ -305,9 +262,11 @@ export default function DemoRecommendations() {
                   
                   <CardContent className="space-y-3">
                     {rec.course.description && (
-                      <p className="text-sm text-muted-foreground">
-                        {rec.course.description}
-                      </p>
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          {rec.course.description}
+                        </p>
+                      </div>
                     )}
 
                     <div>

@@ -67,7 +67,7 @@ export const validateRequest = (schemas: {
 }) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {
-      const errors: any[] = [];
+      const errors: { location: string; field: string; message: string }[] = [];
 
       // Validate body if schema provided
       if (schemas.body) {

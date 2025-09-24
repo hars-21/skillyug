@@ -341,10 +341,10 @@ export class PurchaseService {
    * Create bundle purchase
    */
   async createBundlePurchase(
-    userId: string,
-    bundleId: string,
-    paymentRef: string,
-    amount: number
+    _userId: string,
+    _bundleId: string,
+    _paymentRef: string,
+    _amount: number
   ) {
     // This is a placeholder for bundle purchase functionality
     // In a real implementation, you would:

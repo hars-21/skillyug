@@ -38,14 +38,14 @@ export class AppError extends Error {
   public readonly statusCode: HttpStatusCode;
   public readonly isOperational: boolean;
   public readonly timestamp: string;
-  public readonly details?: any;
+  public readonly details?: Record<string, unknown> | Array<Record<string, unknown>>;
 
   constructor(
     message: string,
     type: ErrorType = ErrorType.INTERNAL_SERVER_ERROR,
     statusCode: HttpStatusCode = HttpStatusCode.INTERNAL_SERVER_ERROR,
     isOperational = true,
-    details?: any
+    details?: Record<string, unknown> | Array<Record<string, unknown>>
   ) {
     super(message);
     
@@ -65,7 +65,7 @@ export class AppError extends Error {
  * Validation error class
  */
 export class ValidationError extends AppError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: Record<string, unknown> | Array<Record<string, unknown>>) {
     super(
       message,
       ErrorType.VALIDATION_ERROR,
@@ -136,7 +136,7 @@ export class DuplicateError extends AppError {
  * Business logic error class
  */
 export class BusinessLogicError extends AppError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: Record<string, unknown> | Array<Record<string, unknown>>) {
     super(
       message,
       ErrorType.BUSINESS_LOGIC_ERROR,
@@ -164,13 +164,18 @@ export class ExternalServiceError extends AppError {
  * Database error class
  */
 export class DatabaseError extends AppError {
-  constructor(message = 'Database operation failed', details?: any) {
+  constructor(message = 'Database operation failed', details?: Record<string, unknown> | Array<Record<string, unknown>> | unknown) {
+    // If details is unknown, safely convert it to a Record if possible
+    const safeDetails = details && typeof details === 'object' && details !== null 
+      ? details as Record<string, unknown> | Array<Record<string, unknown>>
+      : details ? { error: String(details) } : undefined;
+      
     super(
       message,
       ErrorType.DATABASE_ERROR,
       HttpStatusCode.INTERNAL_SERVER_ERROR,
       true,
-      details
+      safeDetails
     );
   }
 }

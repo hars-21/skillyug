@@ -2,15 +2,16 @@ import { Response, NextFunction } from 'express';
 import { courseService } from '../services/course.service';
 import { ResponseUtil } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
+import { Category, Difficulty } from '@prisma/client';
 import { 
-  createCourseSchema,
-  updateCourseSchema,
-  paginationSchema
+  createCourseSchema as _createCourseSchema,
+  updateCourseSchema as _updateCourseSchema,
+  paginationSchema as _paginationSchema
 } from '../validators/schemas';
 import type {
   CreateCourseInput,
   UpdateCourseInput,
-  PaginationInput
+  PaginationInput as _PaginationInput
 } from '../validators/schemas';
 
 /**
@@ -43,8 +44,8 @@ export class CourseController {
         Number(page),
         Number(limit),
         {
-          category: category as any,
-          difficulty: difficulty as any,
+          category: category as Category,
+          difficulty: difficulty as Difficulty,
           featured: featured === 'true' ? true : featured === 'false' ? false : undefined,
           search: search as string
         }
@@ -142,7 +143,7 @@ export class CourseController {
         imageUrl: courseData.imageUrl,
         price: courseData.price,
         token: courseData.token,
-        category: courseData.category as any,
+        category: courseData.category as Category,
         difficulty: courseData.difficulty,
         durationHours: courseData.durationHours,
         language: courseData.language,
@@ -177,7 +178,7 @@ export class CourseController {
         imageUrl: updateData.imageUrl,
         price: updateData.price,
         token: updateData.token,
-        category: updateData.category as any,
+        category: updateData.category as Category,
         difficulty: updateData.difficulty,
         durationHours: updateData.durationHours,
         language: updateData.language,

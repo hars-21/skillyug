@@ -3,11 +3,11 @@ import { Response } from 'express';
 /**
  * Standardized API response interface for consistency across all endpoints
  */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   status: 'success' | 'error' | 'fail';
   message?: string;
   data?: T;
-  errors?: any;
+  errors?: Record<string, unknown> | string[] | Array<Record<string, unknown>>;
   meta?: {
     timestamp: string;
     requestId?: string;
@@ -82,7 +82,7 @@ export class ResponseUtil {
   static error(
     res: Response,
     message = 'Internal server error',
-    errors?: any,
+    errors?: Record<string, unknown> | string[] | Array<Record<string, unknown>>,
     statusCode = 500
   ): void {
     const response: ApiResponse = {
@@ -107,7 +107,7 @@ export class ResponseUtil {
   static fail(
     res: Response,
     message: string,
-    errors?: any,
+    errors?: Record<string, unknown> | string[] | Array<Record<string, unknown>>,
     statusCode = 400
   ): void {
     const response: ApiResponse = {
@@ -184,7 +184,7 @@ export class ResponseUtil {
     res: Response,
     message = 'Unauthorized access'
   ): void {
-    this.fail(res, message, null, 401);
+    this.fail(res, message, undefined, 401);
   }
 
   /**
@@ -196,7 +196,7 @@ export class ResponseUtil {
     res: Response,
     message = 'Access forbidden'
   ): void {
-    this.fail(res, message, null, 403);
+    this.fail(res, message, undefined, 403);
   }
 
   /**
@@ -208,7 +208,7 @@ export class ResponseUtil {
     res: Response,
     message = 'Resource not found'
   ): void {
-    this.fail(res, message, null, 404);
+    this.fail(res, message, undefined, 404);
   }
 
   /**
@@ -219,7 +219,7 @@ export class ResponseUtil {
    */
   static validationError(
     res: Response,
-    errors: any,
+    errors: Record<string, unknown> | string[] | Array<Record<string, unknown>>,
     message = 'Validation failed'
   ): void {
     this.fail(res, message, errors, 422);

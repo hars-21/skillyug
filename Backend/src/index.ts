@@ -151,7 +151,7 @@ const authLimiter = rateLimit({
 });
 
 // Stricter rate limiting for sensitive operations
-const strictLimiter = rateLimit({
+const _strictLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 5, // Only 5 attempts per hour for password reset, etc.
     standardHeaders: true,
@@ -212,7 +212,7 @@ app.use("/api/users", userRouter);
 app.use("/api/recommendations", recommendationRouter);
 
 // --- 404 Handler for unmatched routes ---
-app.use((req: Request, res: Response, next: NextFunction) => {
+app.use((req: Request, res: Response, _next: NextFunction) => {
     res.status(404).json({
         status: 'fail',
         message: `Can't find ${req.originalUrl} on this server!`

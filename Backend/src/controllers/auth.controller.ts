@@ -3,14 +3,14 @@ import { authService } from '../services/auth.service';
 import { ResponseUtil } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { 
-  registerSchema,
-  loginSchema,
-  emailLoginSchema,
-  verifyOtpSchema,
-  resendOtpSchema,
-  forgotPasswordSchema,
-  resetPasswordSchema,
-  changePasswordSchema
+  registerSchema as _registerSchema,
+  loginSchema as _loginSchema,
+  emailLoginSchema as _emailLoginSchema,
+  verifyOtpSchema as _verifyOtpSchema,
+  resendOtpSchema as _resendOtpSchema,
+  forgotPasswordSchema as _forgotPasswordSchema,
+  resetPasswordSchema as _resetPasswordSchema,
+  changePasswordSchema as _changePasswordSchema
 } from '../validators/schemas';
 import type {
   RegisterInput,

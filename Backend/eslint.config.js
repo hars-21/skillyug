@@ -39,7 +39,13 @@ module.exports = [
       ...tsPlugin.configs.recommended.rules,
       '@typescript-eslint/no-unused-vars': [
         'warn',
-        { vars: 'all', args: 'after-used', ignoreRestSiblings: true, varsIgnorePattern: '^_' }
+        { 
+          vars: 'all', 
+          args: 'after-used', 
+          ignoreRestSiblings: true, 
+          varsIgnorePattern: '^_',
+          argsIgnorePattern: '^_'
+        }
       ],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-empty-object-type': 'warn',
