@@ -60,9 +60,9 @@ services:
       - skillyug-network
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/heartbeat').read()"]
-      interval: 60s
+      interval: 30s
       timeout: 30s
-      retries: 5
+      retries: 20
       start_period: 120s
     labels:
       - "traefik.enable=false"

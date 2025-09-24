@@ -49,6 +49,9 @@ RUN npx prisma generate
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 
+# Copy any other necessary files (like seed.js for the seed container)
+COPY --from=builder /app/prisma ./prisma
+
 # Change ownership to nodejs user
 RUN chown -R skillyug:nodejs /app
 USER skillyug
@@ -63,5 +66,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start the application
-CMD ["pnpm", "start"]
+# Start the application directly without rebuilding
+CMD ["node", "./dist/src/index.js"]
