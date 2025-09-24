@@ -49,7 +49,7 @@ const AuthContext = createContext<{
   resendOtp: (email: string) => Promise<void>
   createProfileForCurrentUser: () => Promise<boolean>
   checkDatabaseSetup: () => Promise<boolean>
-  testBackendConnection: () => Promise<any>
+  testBackendConnection: () => Promise<unknown>
 } | undefined>(undefined)
 
 export const useAuth = () => {
@@ -60,6 +60,70 @@ export const useAuth = () => {
   return context
 }
 
+/**
+ * AuthProvider component that provides authentication context and functionality to the entire application.
+ * 
+ * This component wraps the application with authentication state management, handling user sessions,
+ * sign-in/sign-up operations, password management, email verification, and backend connectivity.
+ * It integrates with NextAuth.js for session management and provides a unified interface for
+ * authentication operations across the application.
+ * 
+ * @component
+ * @param props - The component props
+ * @param props.children - React nodes to be wrapped with the authentication context
+ * 
+ * @example
+ * ```tsx
+ * // Wrap your app with AuthProvider
+ * <AuthProvider>
+ *   <App />
+ * </AuthProvider>
+ * ```
+ * 
+ * @features
+ * - **Session Management**: Integrates with NextAuth.js for automatic session handling
+ * - **User Registration**: Complete sign-up flow with user type selection
+ * - **Authentication**: Sign-in with comprehensive error handling and email verification
+ * - **Password Management**: Forgot/reset password functionality with token-based verification
+ * - **Email Verification**: OTP-based email verification system with resend capability
+ * - **Error Handling**: Detailed error categorization and user-friendly messaging
+ * - **Loading States**: Centralized loading state management for all auth operations
+ * - **Backend Integration**: Full backend connectivity testing and error reporting
+ * 
+ * @context Provides the following authentication state and methods:
+ * - `user`: Current authenticated user object or null
+ * - `profile`: Normalized user profile with consistent structure
+ * - `session`: NextAuth session object
+ * - `loading`: Combined loading state from NextAuth and internal operations
+ * - `signUp`: User registration with email, password, full name, and user type
+ * - `signIn`: Authentication with comprehensive error handling for various scenarios
+ * - `signOut`: Sign out functionality with cleanup
+ * - `forgotPassword`: Password reset request with email notification
+ * - `resetPassword`: Password reset completion with token validation
+ * - `updatePassword`: Password update for authenticated users (mock implementation)
+ * - `resendVerification`: Email verification resend (mock implementation)
+ * - `verifyOtp`: OTP verification for email confirmation
+ * - `resendOtp`: OTP resend functionality
+ * - `createProfileForCurrentUser`: Profile creation helper
+ * - `checkDatabaseSetup`: Database connectivity verification
+ * - `testBackendConnection`: Backend server health check
+ * 
+ * @errorHandling
+ * The component provides sophisticated error handling for various scenarios:
+ * - **Email Verification Errors**: Detects and handles unverified email addresses
+ * - **Rate Limiting**: Manages too many login attempts with appropriate messaging
+ * - **Network Errors**: Handles connection issues with the backend server
+ * - **Authentication Failures**: Processes various NextAuth error types
+ * - **Server Errors**: Comprehensive error reporting with status codes and messages
+ * 
+ * @dependencies
+ * - NextAuth.js for session management
+ * - Axios for HTTP requests to the backend
+ * - Toast notifications for user feedback
+ * - Custom authentication utilities (registerUser, verifyOtp, etc.)
+ * 
+ * @returns JSX.Element - AuthContext.Provider wrapping the children components
+ */
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { data: session, status } = useSession()
   const [loading, setLoading] = useState(false)
@@ -223,48 +287,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Show success message from the server or a default one
       toast.success(response.data.message || 'If an account exists with this email, a reset link has been sent.');
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Raw error object:', error);
       console.error('Error type:', typeof error);
-      console.error('Error constructor:', error.constructor.name);
+      console.error('Error constructor:', error && typeof error === 'object' && 'constructor' in error ? error.constructor.name : 'Unknown');
       
       // More comprehensive error logging
+      const axiosError = error as AxiosError;
       const errorDetails = {
-        message: error.message || 'Unknown error',
-        name: error.name || 'Unknown',
-        code: error.code || 'No code',
-        stack: error.stack ? error.stack.substring(0, 500) : 'No stack trace',
-        ...(error.response && {
-          status: error.response.status,
-          statusText: error.response.statusText,
-          data: error.response.data,
-          headers: error.response.headers
+        message: axiosError?.message || 'Unknown error',
+        name: axiosError?.name || 'Unknown',
+        code: axiosError?.code || 'No code',
+        stack: axiosError?.stack ? axiosError.stack.substring(0, 500) : 'No stack trace',
+        ...(axiosError?.response && {
+          status: axiosError.response.status,
+          statusText: axiosError.response.statusText,
+          data: axiosError.response.data,
+          headers: axiosError.response.headers
         }),
-        ...(error.request && {
+        ...(axiosError?.request && {
           request: {
-            url: error.request.responseURL || error.config?.url,
-            method: error.config?.method,
-            timeout: error.config?.timeout
+            url: axiosError.request.responseURL || axiosError.config?.url,
+            method: axiosError.config?.method,
+            timeout: axiosError.config?.timeout
           }
         }),
-        isAxiosError: error.isAxiosError,
-        isNetworkError: !error.response && error.request
+        isAxiosError: axiosError?.isAxiosError,
+        isNetworkError: !axiosError?.response && axiosError?.request
       };
       
       console.error('Forgot password error details:', errorDetails);
       
       let errorMessage = 'Failed to process your request';
       
-      if (!error.response && error.request) {
+      if (!axiosError?.response && axiosError?.request) {
         errorMessage = 'Unable to connect to the server. Please check if the backend is running.';
-      } else if (error.response) {
-        errorMessage = error.response.data?.message || `Server error: ${error.response.status}`;
-      } else if (error.code === 'ECONNREFUSED') {
+      } else if (axiosError?.response) {
+        errorMessage = (axiosError.response.data as { message?: string })?.message || `Server error: ${axiosError.response.status}`;
+      } else if (axiosError?.code === 'ECONNREFUSED') {
         errorMessage = 'Connection refused. Backend server may not be running.';
-      } else if (error.code === 'TIMEOUT') {
+      } else if (axiosError?.code === 'TIMEOUT') {
         errorMessage = 'Request timeout. Server may be overloaded.';
       } else {
-        errorMessage = error.message || 'An unexpected error occurred';
+        errorMessage = axiosError?.message || 'An unexpected error occurred';
       }
       
       toast.error(errorMessage);
@@ -278,26 +343,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setLoading(true);
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
-      // Implementation for reset password
-      return { status: 'success', message: 'Password reset successful' };
-    } catch (error: unknown) {
-      console.error('Password reset failed:', error);
-      return { 
-        status: 'error', 
-        message: error instanceof Error ? error.message : 'Failed to reset password' 
-      };
+      const response = await axios.patch(
+        `${backendUrl}/api/auth/reset-password/${token}`,
+        { password, confirmPassword },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+
+      toast.success(response.data.message || 'Password has been reset successfully');
+      return response.data;
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to reset password';
+      toast.error(errorMessage);
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  const updatePassword = async (_newPassword: string): Promise<void> => {
+  const updatePassword = async (_newPassword: string) => {
     // Mock implementation - in production, implement actual password update
+    console.log('Updating password for user:', _newPassword ? 'password provided' : 'no password')
     toast.success('Password updated successfully (mock implementation)')
   }
 
-  const resendVerification = async (_email: string): Promise<void> => {
+  const resendVerification = async (_email: string) => {
     // Mock implementation - in production, implement actual email verification
+    console.log('Resending verification for email:', _email)
     toast.success('Verification email sent (mock implementation)')
   }
 
@@ -315,29 +391,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setLoading(true);
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
-      const response = await axios.get(`${backendUrl}/api/test`, {
+      await axios.get(`${backendUrl}/api/test`, {
         timeout: 5000
       });
-      
-      console.log('Backend test response:', response.data);
-      toast.success(`Backend connection successful! ${response.data.message}`);
-      return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Backend test error:', error);
+      const axiosError = error as AxiosError;
       let errorMessage = 'Backend connection failed';
       
-      if (!error.response && error.request) {
+      if (!axiosError.response && axiosError.request) {
         errorMessage = 'Cannot reach backend server. Is it running?';
-      } else if (error.response) {
-        errorMessage = `Backend responded with ${error.response.status}`;
+      } else if (axiosError.response) {
+        errorMessage = `Backend responded with ${axiosError.response.status}`;
       }
       
-      toast.error(errorMessage);
-      throw error;
-    } finally {
-      setLoading(false);
+        toast.error(errorMessage);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
     }
-  };
 
   const handleVerifyOtp = async (email: string, otp: string) => {
     try {

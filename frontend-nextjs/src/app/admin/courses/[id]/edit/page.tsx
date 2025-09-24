@@ -111,45 +111,30 @@ export default function CourseEditPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setSaving(true);
     setSubmitError(null);
-    setSuccessMessage(null);
-
     try {
       const response = await adminCourseAPI.update(courseId, formData);
       
       if (response.status === 'success') {
         setSuccessMessage('Course updated successfully!');
-        // Update the course state with the new data
-        if (response.data) {
-          setCourse(response.data);
-        }
-        // Auto-hide success message after 3 seconds
-        setTimeout(() => setSuccessMessage(null), 3000);
+        setTimeout(() => {
+          router.push('/admin/courses');
+        }, 2000);
       } else {
         setSubmitError(response.message || 'Failed to update course');
       }
-    } catch (error: any) {
-      console.error('Update error:', error);
-      
-      if (error.response?.data?.message) {
-        setSubmitError(error.response.data.message);
-      } else if (error.message) {
-        setSubmitError(error.message);
-      } else {
-        setSubmitError('An unexpected error occurred while updating the course');
-      }
+    } catch (error) {
+      console.error('Error updating course:', error);
+      setSubmitError('Failed to update course. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleInputChange = (field: keyof UpdateCourseInput, value: any) => {
+  const handleInputChange = (field: keyof UpdateCourseInput, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error for this field when user starts typing

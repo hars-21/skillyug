@@ -99,7 +99,7 @@ export default function VerifyEmailPage() {
                 <Mail className="h-5 w-5 text-blue-400 mt-0.5" />
                 <div>
                   <p className="text-white font-medium">Check Your Email</p>
-                  <p className="text-gray-300 text-sm">We've sent a 6-digit verification code to your email address.</p>
+                  <p className="text-gray-300 text-sm">We&apos;ve sent a 6-digit verification code to your email address.</p>
                 </div>
               </div>
             </div>

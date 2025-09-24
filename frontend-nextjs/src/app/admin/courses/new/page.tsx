@@ -6,14 +6,9 @@ import {
   ArrowLeft, 
   Save, 
   AlertCircle, 
-  Upload, 
-  X,
   Plus,
-  Users,
-  Clock,
   Trophy,
   Target,
-  DollarSign,
   BookOpen,
   Minus
 } from 'lucide-react';
@@ -160,7 +155,7 @@ export default function NewCoursePage() {
     }
   };
 
-  const handleInputChange = (field: keyof ExtendedCourseInput, value: any) => {
+  const handleInputChange = (field: keyof ExtendedCourseInput, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error for this field when user starts typing

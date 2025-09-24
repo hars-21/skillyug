@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+// import { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+import { getServerSession } from '@/lib/auth';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession()
     

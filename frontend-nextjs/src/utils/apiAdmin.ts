@@ -9,7 +9,7 @@ export interface AdminApiResponse<T = unknown> {
   status: 'success' | 'error' | 'fail';
   message?: string;
   data?: T;
-  errors?: any;
+  errors?: Record<string, string | string[]>;
   meta?: {
     timestamp: string;
     requestId?: string;
@@ -82,7 +82,7 @@ const createAdminApiInstance = async (): Promise<AxiosInstance> => {
     (response) => response,
     (error: AxiosError) => {
       const status = error.response?.status || 500;
-      const data = error.response?.data as any;
+      const data = error.response?.data as Record<string, unknown>;
       
       console.error('[Admin API] Response error:', {
         status,
@@ -100,9 +100,9 @@ const createAdminApiInstance = async (): Promise<AxiosInstance> => {
       }
 
       throw new AdminApiError(
-        data?.message || error.message || 'Admin API request failed',
+        (data?.message as string) || error.message || 'Admin API request failed',
         status,
-        data?.code,
+        (data?.code as string),
         data
       );
     }
@@ -114,28 +114,28 @@ const createAdminApiInstance = async (): Promise<AxiosInstance> => {
 // Admin API helper functions
 export const adminApiHelpers = {
   // GET request with admin auth
-  get: async <T>(url: string, params?: Record<string, any>): Promise<T> => {
+  get: async <T>(url: string, params?: Record<string, unknown>): Promise<T> => {
     const api = await createAdminApiInstance();
     const response = await api.get(url, { params });
     return response.data;
   },
 
   // POST request with admin auth
-  post: async <T>(url: string, data?: any): Promise<T> => {
+  post: async <T>(url: string, data?: unknown): Promise<T> => {
     const api = await createAdminApiInstance();
     const response = await api.post(url, data);
     return response.data;
   },
 
   // PUT request with admin auth
-  put: async <T>(url: string, data?: any): Promise<T> => {
+  put: async <T>(url: string, data?: unknown): Promise<T> => {
     const api = await createAdminApiInstance();
     const response = await api.put(url, data);
     return response.data;
   },
 
   // PATCH request with admin auth
-  patch: async <T>(url: string, data?: any): Promise<T> => {
+  patch: async <T>(url: string, data?: unknown): Promise<T> => {
     const api = await createAdminApiInstance();
     const response = await api.patch(url, data);
     return response.data;

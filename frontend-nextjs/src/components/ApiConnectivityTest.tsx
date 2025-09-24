@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { healthCheck, authAPI, courseAPI, paymentAPI, handleApiError } from '@/lib/api';
+import { healthCheck, courseAPI, paymentAPI, handleApiError } from '@/lib/api';
 
 interface TestResult {
   name: string;
   status: 'pending' | 'success' | 'error';
   message: string;
   responseTime?: number;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 interface ApiConnectivityTestProps {
@@ -17,14 +17,14 @@ interface ApiConnectivityTestProps {
 }
 
 export default function ApiConnectivityTest({ className = '' }: ApiConnectivityTestProps) {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const [tests, setTests] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [overallStatus, setOverallStatus] = useState<'idle' | 'running' | 'completed'>('idle');
 
   const testCases: Array<{
     name: string;
-    test: () => Promise<{ success: boolean; message: string; data?: any }>;
+    test: () => Promise<{ success: boolean; message: string; data?: Record<string, unknown> }>;
   }> = [
     {
       name: 'Backend Health Check',
@@ -62,7 +62,6 @@ export default function ApiConnectivityTest({ className = '' }: ApiConnectivityT
           const responseTime = Date.now() - startTime;
           
           if (response.ok) {
-            const data = await response.json();
             return {
               success: true,
               message: `CORS is properly configured (${responseTime}ms)`,

@@ -29,7 +29,7 @@ export function ForgotPasswordForm() {
     },
   });
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async () => {
     try {
       setIsSubmitting(true);
       // TODO: Replace with actual API call to your backend
@@ -56,12 +56,12 @@ export function ForgotPasswordForm() {
         <CardHeader>
           <CardTitle className="text-2xl">Check your email</CardTitle>
           <CardDescription>
-            We've sent you a password reset link to your email address. Please check your inbox and follow the instructions to reset your password.
+            We&apos;ve sent you a password reset link to your email address. Please check your inbox and follow the instructions to reset your password.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <p className="text-sm text-muted-foreground">
-            Didn't receive an email?{' '}
+            Didn&apos;t receive an email?{' '}
             <button
               onClick={() => setIsSubmitted(false)}
               className="text-primary underline-offset-4 hover:underline"
@@ -84,7 +84,7 @@ export function ForgotPasswordForm() {
       <CardHeader>
         <CardTitle className="text-2xl">Forgot Password</CardTitle>
         <CardDescription>
-          Enter your email and we'll send you a link to reset your password.
+          Enter your email and we&apos;ll send you a link to reset your password.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
