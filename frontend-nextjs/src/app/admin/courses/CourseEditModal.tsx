@@ -124,7 +124,7 @@ export default function CourseEditModal({ isOpen, onClose, onSuccess, course }: 
     }
   };
 
-  const handleInputChange = (field: keyof UpdateCourseInput, value: any) => {
+  const handleInputChange = (field: keyof UpdateCourseInput, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error for this field when user starts typing
