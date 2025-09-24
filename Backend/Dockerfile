@@ -43,9 +43,11 @@ COPY prisma/ ./prisma/
 # Install production dependencies only
 RUN pnpm install --prod --frozen-lockfile
 
+# Generate Prisma client in production stage
+RUN npx prisma generate
+
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # Change ownership to nodejs user
 RUN chown -R skillyug:nodejs /app
