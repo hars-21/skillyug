@@ -1,22 +1,22 @@
 // Production-grade logging utility
 export const logger = {
-  info: (message: string, data?: any) => {
+  info: (message: string, data?: unknown) => {
     if (process.env.NODE_ENV === 'development') {
       console.log(`[INFO] ${message}`, data);
     }
     // In production, send to logging service (e.g., Sentry, LogRocket)
   },
   
-  error: (message: string, error?: any) => {
+  error: (message: string, error?: Error | unknown) => {
     console.error(`[ERROR] ${message}`, error);
     // In production, send to error tracking service
   },
   
-  warn: (message: string, data?: any) => {
+  warn: (message: string, data?: unknown) => {
     console.warn(`[WARN] ${message}`, data);
   },
   
-  debug: (message: string, data?: any) => {
+  debug: (message: string, data?: unknown) => {
     if (process.env.NODE_ENV === 'development') {
       console.debug(`[DEBUG] ${message}`, data);
     }
