@@ -367,13 +367,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updatePassword = async (_newPassword: string) => {
     // Mock implementation - in production, implement actual password update
-    console.log('Updating password for user:', newPassword ? 'password provided' : 'no password')
+    console.log('Updating password for user:', _newPassword ? 'password provided' : 'no password')
     toast.success('Password updated successfully (mock implementation)')
   }
 
   const resendVerification = async (_email: string) => {
     // Mock implementation - in production, implement actual email verification
-    console.log('Resending verification for email:', email)
+    console.log('Resending verification for email:', _email)
     toast.success('Verification email sent (mock implementation)')
   }
 
