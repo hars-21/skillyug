@@ -1,5 +1,5 @@
 import NextAuth, { DefaultSession } from "next-auth";
-import Credentials from "next-auth/providers/credentials";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { z } from "zod";
 import axios from 'axios';
 
@@ -78,15 +78,16 @@ const getApiUrl = () => {
   return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
 };
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const authConfig = {
   providers: [
-    Credentials({
+    CredentialsProvider({
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async authorize(credentials: any) {
         try {
           const validatedInput = loginSchema.parse({
             email: credentials?.email,
@@ -195,7 +196,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async jwt({ token, user, account }: { token: any; user: any; account: any }) {
       // Initial sign in
       if (account && user) {
         token.sub = user.id;
@@ -207,7 +209,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       
       return token;
     },
-    async session({ session, token }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async session({ session, token }: { session: any; token: any }) {
       if (token && session.user) {
         session.user.id = (token.sub as string) || '';
         session.user.userType = token.userType as UserType;
@@ -217,7 +220,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
-    async redirect({ url, baseUrl }) {
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
       // Handle email verification redirect
       if (url.includes('verify-email')) {
         return url;
@@ -235,12 +238,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/login",
   },
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
     maxAge: 7 * 24 * 60 * 60, // 7 days
   },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
-});
+};
+
+export default NextAuth(authConfig);
+
+// For NextAuth v4, we need to import getServerSession separately
+import { getServerSession as nextAuthGetServerSession } from "next-auth/next";
+
+// Export the auth function for server-side usage
+export const auth = () => nextAuthGetServerSession(authConfig);
 
 // Helper function to register new users
 export async function registerUser(userData: unknown) {
