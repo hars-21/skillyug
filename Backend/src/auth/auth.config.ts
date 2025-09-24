@@ -80,14 +80,14 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }: { token: JWT; user?: any }) {
+    async jwt({ token, user }: { token: JWT; user?: { id: string; userType: UserType } }) {
       if (user) {
         token.sub = user.id;
         token.userType = user.userType;
       }
       return token;
     },
-    async session({ session, token }: { session: any; token: JWT }) {
+    async session({ session, token }: { session: DefaultSession & { user: { id?: string; userType?: UserType } }; token: JWT }) {
       if (token && session.user) {
         session.user.id = token.sub as string;
         session.user.userType = token.userType as UserType;

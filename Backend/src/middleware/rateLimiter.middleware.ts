@@ -88,7 +88,7 @@ export const passwordResetRateLimit = rateLimit({
 export const rateLimiterMiddleware = (options: {
   windowMs?: number;
   max?: number;
-  message?: any;
+  message?: Record<string, unknown>;
 }) => {
   return rateLimit({
     windowMs: options.windowMs || 15 * 60 * 1000, // 15 minutes default

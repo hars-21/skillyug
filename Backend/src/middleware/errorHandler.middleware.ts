@@ -12,7 +12,7 @@ export const globalErrorHandler = (
   error: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
   // Log error for debugging (in production, use proper logging service)
   console.error('Error occurred:', {
@@ -185,7 +185,7 @@ const handleUnknownError = (error: Error, res: Response): void => {
  * Catches async errors and passes them to the global error handler
  */
 export const asyncHandler = (
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
     fn(req, res, next).catch(next);

@@ -5,6 +5,13 @@ import Link from 'next/link';
 import { BookOpen, Users, Award, TrendingUp, ArrowRight } from 'lucide-react';
 import WordRotator from '../components/ExtraComponents/WordRotator';
 import Navbar from '../components/Navbar';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the AnimatedButton component with no SSR
+const AnimatedButton = dynamic(
+  () => import('../components/AnimatedButton'),
+  { ssr: false }
+);
 
 /* Typewriter Hook */
 function useTypewriter(text: string, speed: number = 50) {
@@ -93,12 +100,9 @@ export default function Home() {
                 Explore Courses
                 <ArrowRight className="ml-2" />
               </Link>
-              <Link
-                href="/sign-up"
-                className="px-8 py-4 border-2 border-blue-500 text-blue-400 rounded-lg font-semibold hover:bg-blue-500 hover:text-white transition-all duration-300"
-              >
-                Get Started
-              </Link>
+              <AnimatedButton href="/demo-recommendations">
+                GET STARTED
+              </AnimatedButton>
             </div>
           </div>
         </section>

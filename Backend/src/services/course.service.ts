@@ -1,6 +1,6 @@
 import { courseRepository } from '../repositories/course.repository';
 import { userRepository } from '../repositories/user.repository';
-import { Category, Difficulty, Course } from '@prisma/client';
+import { Category, Difficulty, Course as _Course } from '@prisma/client';
 import { 
   NotFoundError, 
   ValidationError, 
@@ -8,6 +8,14 @@ import {
   AuthorizationError 
 } from '../utils/errors';
 import { createPaginationMeta } from '../utils/response';
+
+// Type for course with count information
+type CourseWithCounts = _Course & {
+  _count?: {
+    enrollments?: number;
+    reviews?: number;
+  };
+};
 
 /**
  * Course Service
@@ -338,8 +346,8 @@ export class CourseService {
     return {
       courseId: course.id,
       courseName: course.courseName,
-      enrollmentCount: (courseWithCounts as any)?._count?.enrollments || 0,
-      reviewCount: (courseWithCounts as any)?._count?.reviews || 0,
+      enrollmentCount: (courseWithCounts as CourseWithCounts)?._count?.enrollments || 0,
+      reviewCount: (courseWithCounts as CourseWithCounts)?._count?.reviews || 0,
       averageRating: course.ratingAverage,
       isActive: course.isActive,
       isFeatured: course.isFeatured,
@@ -350,7 +358,7 @@ export class CourseService {
   /**
    * Validate course access for enrollment
    */
-  async validateCourseAccess(courseId: string, userId: string) {
+  async validateCourseAccess(courseId: string, _userId: string) {
     const course = await courseRepository.findById(courseId);
     if (!course) {
       throw new NotFoundError('Course');

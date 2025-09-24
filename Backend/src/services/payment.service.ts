@@ -10,6 +10,25 @@ import {
   ExternalServiceError
 } from '../utils/errors';
 
+// Type for Razorpay instance with refunds API
+interface RazorpayInstance {
+  orders: {
+    create: (options: Record<string, unknown>) => Promise<unknown>;
+  };
+  refunds: {
+    create: (options: {
+      payment_id: string;
+      amount: number;
+      notes?: Record<string, unknown>;
+    }) => Promise<{
+      id: string;
+      amount: number;
+      status: string;
+      [key: string]: unknown;
+    }>;
+  };
+}
+
 /**
  * Payment Service
  * Handles all payment-related business logic
@@ -231,7 +250,7 @@ export class PaymentService {
   async handlePaymentFailure(
     userId: string,
     courseId: string,
-    errorDetails?: any
+    errorDetails?: Record<string, unknown>
   ) {
     console.error('Payment failed:', {
       userId,
@@ -288,7 +307,7 @@ export class PaymentService {
 
       // Process actual refund with Razorpay
       // Note: Using the correct Razorpay API method
-      const refund = await (instance as any).refunds.create({
+      const refund = await (instance as unknown as RazorpayInstance).refunds.create({
         payment_id: paymentId,
         amount: Math.round(amount * 100), // Convert to paise
         notes: {
@@ -337,7 +356,7 @@ export class PaymentService {
    */
   async getPaymentAnalytics(
     adminId: string,
-    dateRange?: {
+    _dateRange?: {
       startDate: Date;
       endDate: Date;
     }

@@ -5,6 +5,25 @@ import { recommendationService, type IntentRequest, type EngineResponse } from '
 
 const router = Router()
 
+// Define interface for enriched recommendation items
+interface EnrichedRecommendation {
+  courseId: string;
+  title: string;
+  level: string;
+  priceINR: number;
+  imageUrl: string;
+  category: string;
+  rating: number;
+  reviews: number;
+  match_type: string;
+  confidence: number;
+  persuasive_copy: string;
+  reasoning: string;
+  features: string[];
+  badge: string;
+  cta: string;
+}
+
 // Input validation schema
 const intentSchema = z.object({
   query: z.string().min(2),
@@ -16,7 +35,7 @@ const intentSchema = z.object({
 
 // Map engine recommendation item to catalog item
 async function validateAndEnrich(items: EngineResponse['data']['recommendations']) {
-  const enriched: Array<any> = []
+  const enriched: EnrichedRecommendation[] = []
 
   for (const item of items) {
     // NOTE: We do not have a slug/course_stub in DB yet. We use title fuzzy match for now.
@@ -57,9 +76,9 @@ async function validateAndEnrich(items: EngineResponse['data']['recommendations'
       reviews: course.reviewCount,
       match_type: item.match_type,
       confidence: item.confidence,
-      persuasive_copy: item.persuasive_copy,
-      reasoning: item.reasoning,
-      features: item.features,
+      persuasive_copy: item.persuasive_copy || '',
+      reasoning: item.reasoning || '',
+      features: item.features || [],
       badge: item.match_type === 'exact' ? 'Best match' : item.match_type === 'similar' ? 'Great alternative' : 'Learn fundamentals',
       cta: 'Enroll now',
     })
