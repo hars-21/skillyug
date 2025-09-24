@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -64,14 +64,7 @@ export function VerifyOtpForm() {
     }
   }, [countdown]);
 
-  // Auto-submit when 6 digits are entered
-  useEffect(() => {
-    if (otpValue && otpValue.length === 6 && /^\d{6}$/.test(otpValue)) {
-      handleSubmit(onSubmit)();
-    }
-  }, [otpValue, handleSubmit]);
-
-  const onSubmit = async (data: OTPFormData) => {
+  const onSubmit = useCallback(async (data: OTPFormData) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     
@@ -92,7 +85,7 @@ export function VerifyOtpForm() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [isSubmitting, email, router, setValue]);
 
   const handleResendOTP = async () => {
     if (isResending || countdown > 0) return;
@@ -110,6 +103,13 @@ export function VerifyOtpForm() {
       setIsResending(false);
     }
   };
+
+  // Auto-submit when 6 digits are entered
+  useEffect(() => {
+    if (otpValue && otpValue.length === 6 && /^\d{6}$/.test(otpValue)) {
+      handleSubmit(onSubmit)();
+    }
+  }, [otpValue, handleSubmit, onSubmit]);
 
   // Handle individual digit input for better UX
   const handleOTPChange = (value: string) => {
@@ -141,7 +141,7 @@ export function VerifyOtpForm() {
         <Mail className="h-12 w-12 text-primary mx-auto mb-4" />
         <CardTitle className="text-2xl font-bold">Verify Your Email</CardTitle>
         <CardDescription>
-          We've sent a 6-digit verification code to<br />
+          We&apos;ve sent a 6-digit verification code to<br />
           <span className="font-medium text-primary">{email}</span>
         </CardDescription>
       </CardHeader>
@@ -190,7 +190,7 @@ export function VerifyOtpForm() {
           
           <div className="text-center space-y-2">
             <p className="text-sm text-muted-foreground">
-              Didn't receive the code?
+              Didn&apos;t receive the code?
             </p>
             <Button
               type="button"
