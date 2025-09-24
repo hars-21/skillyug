@@ -1,4 +1,4 @@
-import NextAuth, { DefaultSession, User as NextAuthUser, Session as NextAuthSession } from "next-auth";
+import NextAuth, { DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import axios from 'axios';
@@ -12,7 +12,7 @@ export enum UserType {
 
 // Extend the default Session and User types from NextAuth
 declare module "next-auth" {
-  interface Session extends NextAuthSession {
+  interface Session {
     user: {
       id: string;
       userType: UserType;
@@ -21,8 +21,8 @@ declare module "next-auth" {
     } & DefaultSession["user"];
   }
 
-  interface User extends NextAuthUser {
-    id: string;
+  interface User {
+    id?: string;
     name?: string | null;
     email?: string | null;
     image?: string | null;

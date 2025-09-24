@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, AlertCircle, Eye } from 'lucide-react';
 import { adminCourseAPI, AdminCourse, UpdateCourseInput } from '@/utils/apiAdmin';
@@ -12,7 +12,6 @@ interface FormErrors {
 
 export default function CourseEditPage() {
   const params = useParams();
-  const router = useRouter();
   const courseId = params?.id as string;
 
   const [course, setCourse] = useState<AdminCourse | null>(null);
@@ -134,12 +133,17 @@ export default function CourseEditPage() {
       } else {
         setSubmitError(response.message || 'Failed to update course');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Update error:', error);
       
-      if (error.response?.data?.message) {
-        setSubmitError(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as { response?: { data?: { message?: string } } };
+        if (apiError.response?.data?.message) {
+          setSubmitError(apiError.response.data.message);
+        } else {
+          setSubmitError('An unexpected error occurred while updating the course');
+        }
+      } else if (error instanceof Error) {
         setSubmitError(error.message);
       } else {
         setSubmitError('An unexpected error occurred while updating the course');
