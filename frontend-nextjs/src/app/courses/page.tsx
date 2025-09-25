@@ -1,45 +1,61 @@
 'use client'
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../hooks/AuthContext';
 import Navbar from '../../components/Navbar';
 import { BookOpen, Clock, Users, Star } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Courses() {
+  const router = useRouter();
+  const { user } = useAuth();
+
   const courses = [
     {
-      id: 1,
+      id: 'course_web_dev_001',
       title: 'Web Development Fundamentals',
       description: 'Learn the basics of HTML, CSS, and JavaScript to build modern web applications.',
       instructor: 'John Doe',
       duration: '8 weeks',
       students: 1200,
       rating: 4.8,
-      price: 99,
+      price: 1299,
       image: '/Pics/GroupPic.jpg'
     },
     {
-      id: 2,
+      id: 'course_react_002',
       title: 'React Masterclass',
       description: 'Master React.js with hooks, context, and advanced patterns.',
       instructor: 'Jane Smith',
       duration: '6 weeks',
       students: 850,
       rating: 4.9,
-      price: 149,
+      price: 1899,
       image: '/Pics/GroupPic.jpg'
     },
     {
-      id: 3,
+      id: 'course_nodejs_003',
       title: 'Node.js Backend Development',
       description: 'Build scalable backend applications with Node.js and Express.',
       instructor: 'Mike Johnson',
       duration: '10 weeks',
       students: 650,
       rating: 4.7,
-      price: 199,
+      price: 2599,
       image: '/Pics/GroupPic.jpg'
     }
   ];
+
+  const handleEnrollClick = (course: any) => {
+    if (!user) {
+      toast.error('Please login to enroll in courses');
+      router.push('/login?redirect=' + encodeURIComponent(`/payment?courseId=${course.id}&amount=${course.price}`));
+      return;
+    }
+
+    router.push(`/payment?courseId=${course.id}&amount=${course.price}`);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-blue-900 to-blue-800">
@@ -86,8 +102,16 @@ export default function Courses() {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-orange-500">${course.price}</span>
-                    <button className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
+                    <span className="text-2xl font-bold" style={{color: '#EB8216'}}>
+                      ₹{course.price.toLocaleString('en-IN')}
+                    </span>
+                    <button 
+                      onClick={() => handleEnrollClick(course)}
+                      className="px-6 py-2 text-white rounded-lg transition-colors"
+                      style={{background: '#EB8216'}}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#d67214'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#EB8216'}
+                    >
                       Enroll Now
                     </button>
                   </div>
