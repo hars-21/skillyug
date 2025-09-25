@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, ArrowLeft, CheckCircle, AlertTriangle, Loader2, RefreshCw, LogIn } from 'lucide-react';
@@ -8,7 +8,7 @@ import { resendOtp } from '@/lib/auth';
 import toast from 'react-hot-toast';
 import Navbar from '@/components/Navbar';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const [isResending, setIsResending] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [email, setEmail] = useState('');
@@ -173,5 +173,13 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin h-8 w-8" /></div>}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

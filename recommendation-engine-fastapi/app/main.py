@@ -75,6 +75,39 @@ async def startup_event():
         logger.info("Initializing vector store...")
         await vector_store.initialize()
         
+        # Initialize data ingestion service
+        logger.info("Initializing data ingestion service...")
+        await data_ingestion_service.initialize()
+        
+        # Auto-load course data if vector store is empty and auto-load is enabled
+        if settings.AUTO_LOAD_COURSES:
+            logger.info("Checking if course data needs to be loaded...")
+            collection_count = await vector_store.get_collection_count()
+            if collection_count == 0:
+                logger.info("Vector store is empty, automatically loading course data...")
+                try:
+                    import os
+                    # Try configured path first, then fallback to relative path
+                    courses_json_path = settings.COURSES_JSON_PATH
+                    if not os.path.exists(courses_json_path):
+                        courses_json_path = os.path.join(os.path.dirname(__file__), '../data/courses.json')
+                    
+                    if os.path.exists(courses_json_path):
+                        logger.info(f"Loading courses from {courses_json_path}")
+                        await data_ingestion_service.process_json_catalog(courses_json_path)
+                        new_count = await vector_store.get_collection_count()
+                        logger.info(f"Course data loaded successfully! Vector store now has {new_count} documents")
+                    else:
+                        logger.warning(f"Course data file not found at {courses_json_path}")
+                        logger.info("To load course data, please ensure courses.json exists or use the /api/ingest-json-catalog endpoint")
+                except Exception as e:
+                    logger.error(f"Failed to auto-load course data: {e}")
+                    logger.info("System will continue without pre-loaded course data")
+            else:
+                logger.info(f"Vector store already has {collection_count} documents, skipping auto-load")
+        else:
+            logger.info("Auto-load courses is disabled")
+        
         logger.info("All services initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize services: {e}")
@@ -116,11 +149,12 @@ async def health():
 # ------------ Recommendation Endpoint ------------
 @app.post(
     "/api/recommendations", 
-    response_model=RecommendationResponse,
+    response_model=Dict[str, Any],
     responses={
         200: {"description": "Successfully generated recommendations"},
-        400: {"model": ErrorResponse, "description": "Invalid request"},
-        500: {"model": ErrorResponse, "description": "Internal server error"}
+        400: {"description": "Invalid request"},
+        503: {"description": "Service temporarily unavailable"},
+        500: {"description": "Internal server error"}
     }
 )
 async def get_recommendations(request: RecommendationRequest):
@@ -136,28 +170,89 @@ async def get_recommendations(request: RecommendationRequest):
     try:
         logger.info(f"Received recommendation request: {request}")
         
+        # Check if services are ready
+        if not model_service.is_initialized:
+            return {
+                "success": False,
+                "error": "Model service is not ready. Please try again in a few moments."
+            }
+        
+        if not vector_store.is_initialized:
+            return {
+                "success": False,
+                "error": "Vector store is not ready. Please try again in a few moments."
+            }
+        
+        # Check if we have course data
+        collection_count = await vector_store.get_collection_count()
+        if collection_count == 0:
+            return {
+                "success": False,
+                "error": "No course data available. The system is still initializing."
+            }
+        
         # Validate request
         if not request.user_query or not request.user_query.strip():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="user_query is required and cannot be empty"
-            )
+            return {
+                "success": False,
+                "error": "user_query is required and cannot be empty"
+            }
         
         # Get recommendations
         response = await recommendation_service.get_recommendations(request)
         
         logger.info(f"Generated {len(response.recommendations)} recommendations")
-        return response
+        
+        # Return in the format expected by frontend
+        return {
+            "success": True,
+            "data": {
+                "recommendations": [
+                    {
+                        "course": {
+                            "id": rec.course.id,
+                            "title": rec.course.title,
+                            "description": rec.course.description,
+                            "level": rec.course.level,
+                            "category": rec.course.category,
+                            "tags": rec.course.tags,
+                            "price": rec.course.price,
+                            "rating": rec.course.rating,
+                            "students_count": rec.course.students_count,
+                            "instructor": rec.course.instructor,
+                            "image_url": str(rec.course.image_url) if rec.course.image_url else None,
+                            "created_at": rec.course.created_at,
+                            "updated_at": rec.course.updated_at
+                        },
+                        "confidence_score": rec.confidence_score,
+                        "reasoning": rec.reasoning,
+                        "match_type": rec.match_type,
+                        "metadata": rec.metadata
+                    } for rec in response.recommendations
+                ],
+                "query": response.query,
+                "intent": {
+                    "level": response.intent.level,
+                    "keywords": response.intent.keywords,
+                    "topics": response.intent.topics,
+                    "intent_type": response.intent.intent_type
+                },
+                "match_type": response.match_type,
+                "timestamp": response.timestamp
+            }
+        }
         
     except HTTPException as he:
-        # Re-raise HTTP exceptions as-is
-        raise he
+        return {
+            "success": False,
+            "error": he.detail
+        }
     except Exception as e:
         logger.error(f"Error generating recommendations: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate recommendations: {str(e)}"
-        )
+        return {
+            "success": False,
+            "error": f"Failed to generate recommendations: {str(e)}"
+        }
 # ------------ Backend-Compatible Recommendation Endpoint ------------
 @app.post(
     "/api/recommendations/backend",
@@ -292,6 +387,58 @@ async def process_catalog_background():
             
     except Exception as e:
         logger.error(f"Background catalog processing failed: {e}")
+
+async def process_json_catalog_background():
+    """Background task to process JSON catalog."""
+    try:
+        logger.info("Starting background JSON catalog processing...")
+        
+        json_path = os.path.join(os.path.dirname(__file__), '../data/courses.json')
+        
+        if os.path.exists(json_path):
+            courses = await data_ingestion_service.process_json_catalog(json_path)
+            
+            if courses:
+                await vector_store.add_courses(courses)
+                logger.info(f"Background task completed: processed {len(courses)} courses from JSON")
+            else:
+                logger.warning("Background task: no courses extracted from JSON")
+        else:
+            logger.warning(f"Background task: JSON not found at {json_path}")
+            
+    except Exception as e:
+        logger.error(f"Background JSON catalog processing failed: {e}")
+
+@app.post(
+    "/api/ingest-json-catalog",
+    response_model=Dict[str, Any],
+    tags=["Data Management"],
+    responses={
+        200: {"description": "JSON course catalog ingestion started"},
+        500: {"model": ErrorResponse, "description": "Failed to start ingestion"}
+    }
+)
+async def ingest_json_course_catalog(background_tasks: BackgroundTasks):
+    """
+    Manually trigger course catalog ingestion from JSON file.
+    This will process the courses.json file and update the vector store.
+    """
+    try:
+        # Add background task to process the JSON catalog
+        background_tasks.add_task(process_json_catalog_background)
+        
+        return {
+            "success": True,
+            "message": "JSON course catalog ingestion started in background",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to start JSON catalog ingestion: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to start JSON catalog ingestion: {str(e)}"
+        )
 
 # ------------ Vector Store Status Endpoint ------------
 @app.get(
