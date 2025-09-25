@@ -421,5 +421,84 @@ class DataIngestionService:
         except Exception as e:
             logger.error(f"Failed to save processed data: {e}")
 
+    async def process_json_catalog(self, json_path: str) -> List[Dict[str, Any]]:
+        """Process course catalog from JSON file."""
+        try:
+            logger.info(f"Processing JSON catalog from: {json_path}")
+            
+            with open(json_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            courses = []
+            if 'courses' in data:
+                for course_data in data['courses']:
+                    # Process each course
+                    processed_course = await self._process_json_course(course_data)
+                    if processed_course:
+                        courses.append(processed_course)
+            
+            logger.info(f"Processed {len(courses)} courses from JSON")
+            
+            # Generate embeddings
+            if courses:
+                courses = await self.generate_embeddings(courses)
+                await self._save_processed_data(courses)
+            
+            return courses
+            
+        except Exception as e:
+            logger.error(f"Failed to process JSON catalog: {e}")
+            return []
+    
+    async def _process_json_course(self, course_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Process a single course from JSON data."""
+        try:
+            # Create embedding text from course data
+            embedding_parts = []
+            
+            # Add title and description
+            if course_data.get('title'):
+                embedding_parts.append(course_data['title'])
+            if course_data.get('description'):
+                embedding_parts.append(course_data['description'])
+            
+            # Add topics and tags
+            if course_data.get('topics'):
+                embedding_parts.extend(course_data['topics'])
+            if course_data.get('tags'):
+                embedding_parts.extend(course_data['tags'])
+            
+            # Add projects
+            if course_data.get('projects'):
+                embedding_parts.extend(course_data['projects'])
+            
+            embedding_text = ' '.join(embedding_parts)
+            
+            # Create processed course
+            processed_course = {
+                'id': course_data.get('id', f"course_{hash(embedding_text) % 10000}"),
+                'title': course_data.get('title', ''),
+                'description': course_data.get('description', ''),
+                'level': course_data.get('level', 'beginner'),
+                'category': course_data.get('category', ''),
+                'price': float(course_data.get('price', 0)),
+                'duration': course_data.get('duration', ''),
+                'rating': float(course_data.get('rating', 0)),
+                'students_count': int(course_data.get('students_count', 0)),
+                'instructor': course_data.get('instructor', ''),
+                'tags': course_data.get('tags', []),
+                'topics': course_data.get('topics', []),
+                'projects': course_data.get('projects', []),
+                'features': course_data.get('features', []),
+                'embedding_text': embedding_text,
+                'full_content': embedding_text
+            }
+            
+            return processed_course
+            
+        except Exception as e:
+            logger.error(f"Failed to process course {course_data.get('id', 'unknown')}: {e}")
+            return None
+
 # Global instance
 data_ingestion_service = DataIngestionService()

@@ -137,6 +137,7 @@ services:
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       DATABASE_URL: postgresql://${POSTGRES_USER:-skillyug_user}:${POSTGRES_PASSWORD:-skillyug_password}@postgres:5432/${POSTGRES_DB:-skillyug}?schema=public
+      RECOMMENDATION_ENGINE_URL: http://recommendation-engine:8003
     ports:
       - "3000:3000"
     networks:
@@ -144,6 +145,7 @@ services:
     depends_on:
       - backend
       - postgres
+      - recommendation-engine
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
       interval: 30s
@@ -195,9 +197,17 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=8003
-      # Future: wire to ChromaDB inside the network
       - CHROMA_HOST=chromadb
       - CHROMA_PORT=8000
+      - CHROMA_COLLECTION=${CHROMA_COLLECTION:-course_embeddings}
+      - AUTO_LOAD_COURSES=${AUTO_LOAD_COURSES:-true}
+      - COURSES_JSON_PATH=${COURSES_JSON_PATH:-/app/data/courses.json}
+      - MAX_CONCURRENT_REQUESTS=${MAX_CONCURRENT_REQUESTS:-100}
+      - REQUEST_TIMEOUT=${REQUEST_TIMEOUT:-30}
+      - MODEL_CACHE_SIZE=${MODEL_CACHE_SIZE:-1000}
+      - HEALTH_CHECK_INTERVAL=${HEALTH_CHECK_INTERVAL:-30}
+      - HEALTH_CHECK_TIMEOUT=${HEALTH_CHECK_TIMEOUT:-10}
+      - HEALTH_CHECK_RETRIES=${HEALTH_CHECK_RETRIES:-3}
     ports:
       - "8003:8003"
     networks:
@@ -207,9 +217,9 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8003/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      interval: ${HEALTH_CHECK_INTERVAL:-30}s
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10}s
+      retries: ${HEALTH_CHECK_RETRIES:-3}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.recommender.rule=Host(`reco.skillyug.local`)"

@@ -51,6 +51,16 @@ class VectorStoreService:
             logger.error(f"Failed to initialize ChromaDB: {e}")
             self.is_initialized = False
     
+    async def get_collection_count(self) -> int:
+        """Get the number of documents in the collection."""
+        try:
+            if not self.is_initialized or not self.collection:
+                return 0
+            return self.collection.count()
+        except Exception as e:
+            logger.error(f"Failed to get collection count: {e}")
+            return 0
+    
     async def _load_course_data(self):
         """Load course data into the vector store if not already loaded."""
         try:
