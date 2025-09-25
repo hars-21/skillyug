@@ -1,14 +1,15 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState } from 'react'
 import { useSession, signIn as authSignIn, signOut as authSignOut } from 'next-auth/react'
 import { registerUser, verifyOtp, resendOtp, UserType } from '../lib/auth'
 import toast from 'react-hot-toast'
 import axios, { AxiosError } from 'axios'
 
-// Extend the User type to include userType
+// Extend the User type to include userType and id
 declare module 'next-auth' {
   interface User {
+    id?: string
     userType?: UserType
   }
 }
@@ -130,10 +131,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const user = session?.user || null
   const profile = user ? {
-    id: user.id,
+    id: (user as User).id,
     full_name: user.name,
     email: user.email,
-    user_type: user.userType || 'student',
+    user_type: (user as User).userType || 'student',
     email_verified: true
   } : null
 
@@ -355,9 +356,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       toast.success(response.data.message || 'Password has been reset successfully');
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Reset password error:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to reset password';
+      const axiosError = error as AxiosError;
+      const errorMessage = (axiosError.response?.data as { message?: string })?.message || axiosError.message || 'Failed to reset password';
       toast.error(errorMessage);
       throw error;
     } finally {

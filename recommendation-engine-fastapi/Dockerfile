@@ -28,12 +28,18 @@ RUN pip install --upgrade pip && \
 # Download spaCy English model (optional, fallback will handle if not available)
 RUN python -m spacy download en_core_web_sm || echo "spaCy model download failed, will use fallback"
 
-# Copy application code
+# Pre-download the sentence transformer model to avoid runtime downloads
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')" || echo "Model pre-download failed, will download at runtime"
+
+# Copy application code and data
 COPY app/ ./app/
+COPY data/ ./data/
+COPY startup.sh ./startup.sh
 
 # Create a non-root user and switch to it
 RUN useradd -m appuser && \
-    chown -R appuser:appuser /app
+    chown -R appuser:appuser /app && \
+    chmod +x /app/startup.sh
 USER appuser
 
 # Set default environment variables
@@ -42,10 +48,12 @@ ENV PORT=8003
 # Expose the port the app runs on
 EXPOSE $PORT
 
+# Use startup script to ensure proper initialization
+CMD ["./startup.sh"]
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:$PORT/health || exit 1
 
-# Command to run the application with auto-reload in development
-# In production, you might want to use a production-ready server like gunicorn
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $PORT --reload"]
+# Command to run the application using our startup script
+CMD ["./startup.sh"]

@@ -9,41 +9,6 @@ import { Badge } from "@/components/ui/badge"
 import { Loader2, Search, Star, TrendingUp, Zap, DollarSign } from 'lucide-react';
 import { getRecommendations, type RecommendationResponse as RecResponse } from '@/services/recommendationService'
 
-interface Course {
-  id: string
-  title: string
-  level: string
-  price: number
-  currency: string
-  features: string[]
-  refund_policy?: string
-  tokens?: number
-  bootcamps?: string
-  certificate?: boolean
-  description?: string
-}
-
-interface Recommendation {
-  course: Course
-  confidence_score: number
-  reasoning: string
-  match_type: 'exact' | 'similar' | 'fallback'
-}
-
-interface RecommendationResponse {
-  query: string
-  intent: {
-    intent: string
-    keywords: string[]
-    level?: string
-    price_range?: { min?: number; max?: number }
-    features?: string[]
-  }
-  recommendations: Recommendation[]
-  message: string
-  total_results: number
-}
-
 const UI_CHIPS = [
   'certification', 'affordable', 'beginner', 'intermediate', 'advanced',
   'bootcamp', 'refund', 'tokens', 'python', 'javascript', 'web development',

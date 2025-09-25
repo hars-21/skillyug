@@ -31,7 +31,7 @@ export interface RecommendationResponse {
 
 export const getRecommendations = async (query: string, uiChips: string[] = []): Promise<RecommendationResponse> => {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_RECOMMENDATION_API_URL}/recommend`, {
+    const response = await fetch('/api/recommendations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -129,4 +129,11 @@ const AdminDashboard = () => {
   );
 };
 
+// Disable static generation to prevent AuthProvider issues during build
+export async function getServerSideProps() {
+  return {
+    props: {}
+  };
+}
+
 export default AdminDashboard;
