@@ -1,4 +1,5 @@
 import NextAuth, { DefaultSession } from "next-auth";
+import type { NextAuthConfig } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { z } from "zod";
 import axios from 'axios';
@@ -78,7 +79,8 @@ const getApiUrl = () => {
   return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
 };
 
-export const authConfig = {
+// NextAuth v5 configuration
+export const authConfig: NextAuthConfig = {
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -196,31 +198,32 @@ export const authConfig = {
     }),
   ],
   callbacks: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async jwt({ token, user, account }: { token: any; user: any; account: any }) {
+    async jwt(params) {
+      const { token, user, account } = params;
       // Initial sign in
       if (account && user) {
         token.sub = user.id;
-        token.userType = user.userType as UserType;
-        token.accessToken = user.accessToken;
-        token.emailVerificationRequired = user.emailVerificationRequired;
+        token.userType = (user as any).userType as UserType;
+        token.accessToken = (user as any).accessToken;
+        token.emailVerificationRequired = (user as any).emailVerificationRequired;
         token.email = user.email;
       }
       
       return token;
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async session({ session, token }: { session: any; token: any }) {
+    async session(params) {
+      const { session, token } = params;
       if (token && session.user) {
         session.user.id = (token.sub as string) || '';
-        session.user.userType = token.userType as UserType;
-        session.user.accessToken = token.accessToken as string;
-        session.user.emailVerificationRequired = token.emailVerificationRequired as boolean;
+        (session.user as any).userType = token.userType as UserType;
+        (session.user as any).accessToken = token.accessToken as string;
+        (session.user as any).emailVerificationRequired = token.emailVerificationRequired as boolean;
         session.user.email = token.email as string;
       }
       return session;
     },
-    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+    async redirect(params) {
+      const { url, baseUrl } = params;
       // Handle email verification redirect
       if (url.includes('verify-email')) {
         return url;
@@ -245,13 +248,8 @@ export const authConfig = {
   debug: process.env.NODE_ENV === 'development',
 };
 
-export default NextAuth(authConfig);
-
-// For NextAuth v4, we need to import getServerSession separately
-import { getServerSession as nextAuthGetServerSession } from "next-auth/next";
-
-// Export the auth function for server-side usage
-export const auth = () => nextAuthGetServerSession(authConfig);
+// NextAuth v5 export pattern
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
 
 // Helper function to register new users
 export async function registerUser(userData: unknown) {
@@ -413,7 +411,7 @@ export async function sendVerificationOtp(email: string) {
   }
 }
 
-// Helper function to get the current session with proper typing
+// Helper function to get the current session with proper typing (NextAuth v5)
 export async function getServerSession() {
   return await auth();
 }

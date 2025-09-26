@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "../hooks/AuthContext";
 import { Toaster } from "react-hot-toast";
 import SessionProviderWrapper from "@/components/SessionProvider";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const redHatDisplay = Red_Hat_Display({
   variable: "--font-red-hat-display",
@@ -29,13 +30,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${redHatDisplay.variable} ${montserrat.variable} antialiased`}
-      >
+      <body className={`${redHatDisplay.variable} ${montserrat.variable} antialiased`}>
         <SessionProviderWrapper>
           <AuthProvider>
-            <Toaster />
-            {children}
+            <ErrorBoundary>
+              <Toaster position="top-center" />
+              {children}
+            </ErrorBoundary>
           </AuthProvider>
         </SessionProviderWrapper>
       </body>
