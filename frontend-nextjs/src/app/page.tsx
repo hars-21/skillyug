@@ -100,7 +100,7 @@ export default function Home() {
                 Explore Courses
                 <ArrowRight className="ml-2" />
               </Link>
-              <AnimatedButton href="/demo-recommendations">
+              <AnimatedButton href="/qanda">
                 GET STARTED
               </AnimatedButton>
             </div>
