@@ -1,0 +1,327 @@
+{
+  "courses": [
+    {
+      "id": "python_beginner",
+      "title": "Python Beginner – ₹1299",
+      "description": "Perfect for absolute beginners. Learn: Variables, loops, functions, data types. Hands-on: Mini projects (Calculator, Quiz App)",
+      "level": "beginner",
+      "category": "Programming",
+      "track": "python",
+      "price": 1299,
+      "duration": "22 Hours",
+      "rating": 4.5,
+      "students_count": 1000,
+      "instructor": "Expert Instructor",
+      "tags": ["python", "programming", "beginner"],
+      "features": [
+        "Complete course + Scholarship test = Up to 75% refund",
+        "20 tokens (missed class buyback)",
+        "2 bootcamps @ 30% OFF",
+        "Certificate of Completion"
+      ],
+      "topics": ["variables", "loops", "functions", "data types", "mini projects"],
+      "projects": ["Calculator", "Quiz App"],
+      "career_outcomes": [
+        "Python Automation Specialist",
+        "Junior Python Developer",
+        "Data Entry Automation",
+        "Basic Scripting Jobs"
+      ],
+      "next_courses": ["python_bundle_intermediate"],
+      "emoji": "🐍"
+    },
+    {
+      "id": "python_bundle_intermediate",
+      "title": "Python Bundle (Beginner → Intermediate) – ₹1899",
+      "description": "Upgrade your Python skills step by step. Learn: File handling, exception handling, dictionaries, OOP basics. Projects: Student Report Generator, Web Scraper",
+      "level": "intermediate",
+      "category": "Programming",
+      "track": "python",
+      "price": 1899,
+      "duration": "50 Hours",
+      "rating": 4.6,
+      "students_count": 800,
+      "instructor": "Expert Instructor",
+      "tags": ["python", "programming", "intermediate", "oop"],
+      "features": [
+        "Complete course + Scholarship test = Up to 75% refund",
+        "50 tokens",
+        "4 bootcamps @ 35% OFF",
+        "Industry mentorship + Placement prep",
+        "Certificate of Completion"
+      ],
+      "topics": ["file handling", "exception handling", "dictionaries", "oop basics"],
+      "projects": ["Student Report Generator", "Web Scraper"],
+      "career_outcomes": [
+        "Python Developer",
+        "Backend Developer",
+        "Automation Engineer",
+        "Data Analyst"
+      ],
+      "next_courses": ["python_pro_bundle"],
+      "emoji": "🐍"
+    },
+    {
+      "id": "python_pro_bundle",
+      "title": "Python Pro Bundle (Beginner → Advanced) – ₹2599",
+      "description": "Become job-ready with advanced Python. Learn: Advanced OOP, decorators, generators, NumPy, Pandas, Matplotlib, Flask. Projects: Blog Website, Data Analysis, Automation Scripts",
+      "level": "advanced",
+      "category": "Programming",
+      "track": "python",
+      "price": 2599,
+      "duration": "90 Hours",
+      "rating": 4.8,
+      "students_count": 600,
+      "instructor": "Expert Instructor",
+      "tags": ["python", "programming", "advanced", "data science", "web development"],
+      "features": [
+        "Complete course + Scholarship test = Up to 75% refund",
+        "65 tokens",
+        "8 bootcamps @ 40% OFF",
+        "Mentorship + Placement prep",
+        "Internship pathways",
+        "Certificate of Completion"
+      ],
+      "topics": ["advanced oop", "decorators", "generators", "numpy", "pandas", "matplotlib", "flask"],
+      "projects": ["Blog Website", "Data Analysis", "Automation Scripts"],
+      "career_outcomes": [
+        "Senior Python Developer",
+        "Data Scientist",
+        "Full-Stack Developer",
+        "Machine Learning Engineer"
+      ],
+      "next_courses": [],
+      "emoji": "🐍"
+    },
+    {
+      "id": "java_beginner",
+      "title": "Java Beginner – ₹1299",
+      "description": "Perfect for coding beginners who want to start with Java. Learn: Variables, loops, conditions, functions, arrays, strings. Hands-on: Mini projects (Calculator, Tic-Tac-Toe)",
+      "level": "beginner",
+      "category": "Programming",
+      "track": "javadsa",
+      "price": 1299,
+      "duration": "25 Hours",
+      "rating": 4.4,
+      "students_count": 950,
+      "instructor": "Expert Instructor",
+      "tags": ["java", "programming", "beginner"],
+      "features": [
+        "Complete course + Scholarship test = Up to 30% refund",
+        "20 tokens (missed class buyback)",
+        "2 bootcamps @ 30% OFF",
+        "Certificate of Completion"
+      ],
+      "topics": ["variables", "loops", "conditions", "functions", "arrays", "strings"],
+      "projects": ["Calculator", "Tic-Tac-Toe"],
+      "career_outcomes": [
+        "Junior Java Developer",
+        "Software Trainee",
+        "Programming Tutor",
+        "Entry-level Developer"
+      ],
+      "next_courses": ["java_bundle_dsa"],
+      "emoji": "☕"
+    },
+    {
+      "id": "java_bundle_dsa",
+      "title": "Java Bundle (Beginner → Intermediate DSA) – ₹1899",
+      "description": "Step up your coding with Java + core Data Structures. Learn: Beginner topics + Recursion, Linked List, Stack, Queue, Searching & Sorting algorithms. Projects: Student Record System, Algorithm Visualizer",
+      "level": "intermediate",
+      "category": "Programming",
+      "track": "javadsa",
+      "price": 1899,
+      "duration": "55 Hours",
+      "rating": 4.7,
+      "students_count": 700,
+      "instructor": "Expert Instructor",
+      "tags": ["java", "programming", "dsa", "data structures", "algorithms"],
+      "features": [
+        "Complete course + Scholarship test = Up to 50% refund",
+        "50 tokens",
+        "4 bootcamps @ 35% OFF",
+        "Industry mentorship + Placement prep",
+        "Certificate of Completion"
+      ],
+      "topics": ["recursion", "linked list", "stack", "queue", "searching algorithms", "sorting algorithms"],
+      "projects": ["Student Record System", "Algorithm Visualizer"],
+      "career_outcomes": [
+        "Java Developer",
+        "Software Engineer",
+        "Backend Developer",
+        "System Analyst"
+      ],
+      "next_courses": ["java_pro_bundle_advanced_dsa"],
+      "emoji": "☕"
+    },
+    {
+      "id": "java_pro_bundle_advanced_dsa",
+      "title": "Java Pro Bundle (Beginner → Advanced DSA) – ₹2599",
+      "description": "Become job-ready with advanced Java + DSA. Learn: Intermediate topics + Trees, Graphs, Dynamic Programming, Backtracking, Advanced OOP (inheritance, polymorphism). Projects: E-commerce Backend Simulation, Competitive Programming Challenges",
+      "level": "advanced",
+      "category": "Programming",
+      "track": "javadsa",
+      "price": 2599,
+      "duration": "95 Hours",
+      "rating": 4.9,
+      "students_count": 500,
+      "instructor": "Expert Instructor",
+      "tags": ["java", "programming", "advanced dsa", "competitive programming", "backend"],
+      "features": [
+        "Complete course + Scholarship test = Up to 75% refund",
+        "65 tokens",
+        "8 bootcamps @ 40% OFF",
+        "Mentorship + Placement prep",
+        "Internship pathways",
+        "Certificate of Completion"
+      ],
+      "topics": ["trees", "graphs", "dynamic programming", "backtracking", "inheritance", "polymorphism"],
+      "projects": ["E-commerce Backend Simulation", "Competitive Programming Challenges"],
+      "career_outcomes": [
+        "Senior Java Developer",
+        "Software Architect",
+        "Technical Lead",
+        "Competitive Programmer"
+      ],
+      "next_courses": [],
+      "emoji": "☕"
+    },
+    {
+      "id": "web_dev_beginner",
+      "title": "Web Dev Beginner – ₹1299",
+      "description": "Perfect for beginners exploring the world of websites. Learn: HTML, CSS, JavaScript basics, responsive design. Hands-on: Personal Portfolio Website",
+      "level": "beginner",
+      "category": "Web Development",
+      "track": "webdev",
+      "price": 1299,
+      "duration": "25 Hours",
+      "rating": 4.4,
+      "students_count": 1200,
+      "instructor": "Expert Instructor",
+      "tags": ["html", "css", "javascript", "web development", "responsive design"],
+      "features": [
+        "Complete course + Scholarship test = Up to 30% refund",
+        "20 tokens (missed class buyback)",
+        "2 bootcamps @ 30% OFF",
+        "Certificate of Completion"
+      ],
+      "topics": ["html", "css", "javascript basics", "responsive design"],
+      "projects": ["Personal Portfolio Website"],
+      "career_outcomes": [
+        "Frontend Developer",
+        "Web Designer",
+        "UI Developer",
+        "Freelance Web Developer"
+      ],
+      "next_courses": ["web_dev_bundle_intermediate"],
+      "emoji": "🌐"
+    },
+    {
+      "id": "web_dev_bundle_intermediate",
+      "title": "Web Dev Bundle (Beginner → Intermediate) – ₹1899",
+      "description": "Build modern, dynamic websites with ease. Learn: Beginner topics + DOM manipulation, Bootstrap, Git & GitHub, Node.js basics, REST APIs. Projects: Blogging Platform, To-Do App with Database",
+      "level": "intermediate",
+      "category": "Web Development",
+      "track": "webdev",
+      "price": 1899,
+      "duration": "55 Hours",
+      "rating": 4.6,
+      "students_count": 850,
+      "instructor": "Expert Instructor",
+      "tags": ["web development", "dom manipulation", "bootstrap", "nodejs", "rest api"],
+      "features": [
+        "Complete course + Scholarship test = Up to 50% refund",
+        "50 tokens",
+        "4 bootcamps @ 35% OFF",
+        "Industry mentorship + Placement prep",
+        "Certificate of Completion"
+      ],
+      "topics": ["dom manipulation", "bootstrap", "git & github", "nodejs basics", "rest apis"],
+      "projects": ["Blogging Platform", "To-Do App with Database"],
+      "career_outcomes": [
+        "Full-Stack Developer",
+        "JavaScript Developer",
+        "API Developer",
+        "Web Application Developer"
+      ],
+      "next_courses": ["web_dev_pro_bundle_fullstack"],
+      "emoji": "🌐"
+    },
+    {
+      "id": "web_dev_pro_bundle_fullstack",
+      "title": "Web Dev Pro Bundle (Beginner → Advanced Full-Stack) – ₹2599",
+      "description": "Master full-stack web development and become job-ready. Learn: Intermediate topics + Express.js, MongoDB, Authentication, React.js, Deployment (Vercel/Netlify). Projects: E-commerce Store, Chat Application, Full-stack MERN App",
+      "level": "advanced",
+      "category": "Web Development",
+      "track": "webdev",
+      "price": 2599,
+      "duration": "95 Hours",
+      "rating": 4.8,
+      "students_count": 650,
+      "instructor": "Expert Instructor",
+      "tags": ["full-stack", "mern", "reactjs", "mongodb", "expressjs"],
+      "features": [
+        "Complete course + Scholarship test = Up to 75% refund",
+        "65 tokens",
+        "8 bootcamps @ 40% OFF",
+        "Mentorship + Placement prep",
+        "Internship pathways",
+        "Certificate of Completion"
+      ],
+      "topics": ["expressjs", "mongodb", "authentication", "reactjs", "deployment", "vercel", "netlify"],
+      "projects": ["E-commerce Store", "Chat Application", "Full-stack MERN App"],
+      "career_outcomes": [
+        "Senior Full-Stack Developer",
+        "MERN Stack Developer",
+        "Technical Architect",
+        "Startup CTO"
+      ],
+      "next_courses": [],
+      "emoji": "🌐"
+    }
+  ],
+  "learning_tracks": {
+    "python": {
+      "name": "Python Development Track",
+      "description": "Master Python from basics to advanced data science and web development",
+      "emoji": "🐍",
+      "color": "from-blue-500 to-green-500",
+      "total_duration": "162 Hours",
+      "career_paths": [
+        "Data Scientist",
+        "Backend Developer",
+        "Machine Learning Engineer",
+        "Automation Specialist"
+      ],
+      "courses": ["python_beginner", "python_bundle_intermediate", "python_pro_bundle"]
+    },
+    "javadsa": {
+      "name": "Java & DSA Mastery Track",
+      "description": "Become a competitive programmer and enterprise Java developer",
+      "emoji": "☕",
+      "color": "from-orange-500 to-red-500",
+      "total_duration": "175 Hours",
+      "career_paths": [
+        "Software Engineer",
+        "Backend Developer",
+        "System Architect",
+        "Competitive Programmer"
+      ],
+      "courses": ["java_beginner", "java_bundle_dsa", "java_pro_bundle_advanced_dsa"]
+    },
+    "webdev": {
+      "name": "Full-Stack Web Development Track",
+      "description": "Build modern web applications from frontend to backend",
+      "emoji": "🌐",
+      "color": "from-green-500 to-blue-500",
+      "total_duration": "175 Hours",
+      "career_paths": [
+        "Full-Stack Developer",
+        "Frontend Developer",
+        "MERN Stack Developer",
+        "Web Application Architect"
+      ],
+      "courses": ["web_dev_beginner", "web_dev_bundle_intermediate", "web_dev_pro_bundle_fullstack"]
+    }
+  }
+}
