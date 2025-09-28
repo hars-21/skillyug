@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../hooks/AuthContext';
 import Navbar from '../../components/Navbar';
-import { BookOpen, Clock, Users, Star, Filter, Search } from 'lucide-react';
+import { BookOpen, Clock, Users, Star, Filter, Search, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { courseAPI, type Course } from '@/lib/api';
 
@@ -211,7 +211,7 @@ export default function Courses() {
 													</div>
 													{course.isFeatured && (
 														<div className="flex items-center space-x-1">
-															<Star className="h-4 w-4 text-yellow-500" />
+															<Sparkles className="h-4 w-4 text-yellow-500" />
 															<span className="text-yellow-500 text-xs">Featured</span>
 														</div>
 													)}

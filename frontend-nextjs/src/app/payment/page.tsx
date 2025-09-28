@@ -262,7 +262,7 @@ export default function PaymentPage() {
 									<div className="flex justify-between">
 										<span className="text-gray-400">Category:</span>
 										<span className="text-white capitalize">
-											{course.category.replace("_", " ")}
+											{course.category.replace("_", " ").toLowerCase()}
 										</span>
 									</div>
 									<div className="flex justify-between">
@@ -351,18 +351,18 @@ export default function PaymentPage() {
 									Privacy Policy
 								</Link>
 							</p>
-						</div>
-					</div>
 
-					{/* Go Back Link */}
-					<div className="text-center mt-8">
-						<Link
-							href="/courses"
-							className="inline-flex items-center text-gray-300 hover:text-white transition-colors"
-						>
-							<ArrowLeft className="w-4 h-4 mr-2" />
-							Back to Courses
-						</Link>
+							{/* Go Back Link */}
+							<div className="text-center mt-8">
+								<Link
+									href="/courses"
+									className="inline-flex items-center text-gray-300 hover:text-white hover:underline transition-colors"
+								>
+									<ArrowLeft className="w-4 h-4 mr-2" />
+									Back to Courses
+								</Link>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>

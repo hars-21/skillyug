@@ -52,16 +52,20 @@ const createApiInstance = (): AxiosInstance => {
 	instance.interceptors.request.use(
 		async (config) => {
 			try {
-				// Try to get NextAuth session first
 				const session = await getSession();
+				
 				if (session?.user) {
-					// Add session info to headers if needed
+					// Add session info to headers
 					config.headers["X-User-ID"] = session.user.id;
 					config.headers["X-User-Type"] = session.user.userType;
+					
+					const accessToken = (session.user as any).accessToken;
+					if (accessToken) {
+						config.headers.Authorization = `Bearer ${accessToken}`;
+					} 
 				}
 
-				// Fallback to localStorage token if available
-				if (typeof window !== "undefined") {
+				if (!config.headers.Authorization && typeof window !== "undefined") {
 					const token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
 					if (token) {
 						config.headers.Authorization = `Bearer ${token}`;
