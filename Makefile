@@ -27,18 +27,18 @@ help: ## Show this help message
 
 dev: ## Start development environment
 	@echo "${BLUE}🚀 Starting Skillyug Development Environment${NC}"
-	@cp --update=none .env.development .env || true
+	@cp .env.development .env 2>/dev/null || true
 	@docker compose -f docker-compose.dev.yml up --build
 
 prod: ## Start production environment
 	@echo "${BLUE}🚀 Starting Skillyug Production Environment${NC}"
 	@if [ ! -f .env ]; then echo "${RED}❌ .env file not found. Please copy .env.production to .env and configure it.${NC}"; exit 1; fi
-	@docker compose up --build -d
+	@docker compose -f docker-compose.yml up --build -d
 
 build: ## Build all services
 	@echo "${BLUE}🔨 Building Skillyug Services${NC}"
 	@if [ "$(ENV)" = "prod" ]; then \
-		docker compose build; \
+		docker compose -f docker-compose.yml build; \
 	else \
 		docker compose -f docker-compose.dev.yml build; \
 	fi
@@ -46,7 +46,7 @@ build: ## Build all services
 up: ## Start services (without build)
 	@echo "${BLUE}⬆️  Starting Skillyug Services${NC}"
 	@if [ "$(ENV)" = "prod" ]; then \
-		docker compose up -d; \
+		docker compose -f docker-compose.yml up -d; \
 	else \
 		docker compose -f docker-compose.dev.yml up; \
 	fi
@@ -54,7 +54,7 @@ up: ## Start services (without build)
 down: ## Stop and remove all services
 	@echo "${BLUE}⬇️  Stopping Skillyug Services${NC}"
 	@if [ "$(ENV)" = "prod" ]; then \
-		docker compose down; \
+		docker compose -f docker-compose.yml down; \
 	else \
 		docker compose -f docker-compose.dev.yml down; \
 	fi
@@ -62,7 +62,7 @@ down: ## Stop and remove all services
 clean: ## Stop services and remove volumes
 	@echo "${BLUE}🧹 Cleaning up Skillyug Environment${NC}"
 	@if [ "$(ENV)" = "prod" ]; then \
-		docker compose down -v --remove-orphans; \
+		docker compose -f docker-compose.yml down -v --remove-orphans; \
 	else \
 		docker compose -f docker-compose.dev.yml down -v --remove-orphans; \
 	fi
@@ -71,7 +71,7 @@ clean: ## Stop services and remove volumes
 logs: ## View service logs
 	@echo "${BLUE}📋 Viewing Skillyug Logs${NC}"
 	@if [ "$(ENV)" = "prod" ]; then \
-		docker compose logs -f; \
+		docker compose -f docker-compose.yml logs -f; \
 	else \
 		docker compose -f docker-compose.dev.yml logs -f; \
 	fi
@@ -103,7 +103,7 @@ shell-db: ## Open database shell
 migrate: ## Run database migrations
 	@echo "${BLUE}🗃️  Running Database Migrations${NC}"
 	@if [ "$(ENV)" = "prod" ]; then \
-		docker compose run --rm migrate; \
+		docker compose -f docker-compose.yml run --rm migrate; \
 	else \
 		docker compose -f docker-compose.dev.yml run --rm migrate; \
 	fi
@@ -111,7 +111,7 @@ migrate: ## Run database migrations
 seed: ## Seed the database
 	@echo "${BLUE}🌱 Seeding Database${NC}"
 	@if [ "$(ENV)" = "prod" ]; then \
-		docker compose run --rm seed; \
+		docker compose -f docker-compose.yml run --rm seed; \
 	else \
 		docker compose -f docker-compose.dev.yml run --rm seed; \
 	fi
@@ -122,9 +122,10 @@ studio: ## Start Prisma Studio (dev only)
 
 setup: ## Initial setup for development
 	@echo "${BLUE}⚙️  Setting up Skillyug Development Environment${NC}"
-	@cp --update=none .env.development .env || echo "${YELLOW}⚠️  .env already exists${NC}"
-	@docker compose -f docker-compose.dev.yml up --build -d postgres redis
-	@sleep 10
+	@if [ ! -f .env ]; then cp .env.development .env; echo "${GREEN}✅ Created .env from .env.development${NC}"; else echo "${YELLOW}⚠️  .env already exists${NC}"; fi
+	@docker compose -f docker-compose.dev.yml up --build -d postgres redis chromadb
+	@echo "${YELLOW}⏳ Waiting for services to be ready...${NC}"
+	@sleep 15
 	@$(MAKE) migrate ENV=dev
 	@$(MAKE) seed ENV=dev
 	@echo "${GREEN}✅ Development environment setup complete!${NC}"
@@ -133,7 +134,7 @@ setup: ## Initial setup for development
 status: ## Show container status
 	@echo "${BLUE}📊 Container Status${NC}"
 	@if [ "$(ENV)" = "prod" ]; then \
-		docker compose ps; \
+		docker compose -f docker-compose.yml ps; \
 	else \
 		docker compose -f docker-compose.dev.yml ps; \
 	fi
@@ -146,7 +147,7 @@ restart: ## Restart all services
 restart-backend: ## Restart only backend service
 	@echo "${BLUE}🔄 Restarting Backend Service${NC}"
 	@if [ "$(ENV)" = "prod" ]; then \
-		docker compose restart backend; \
+		docker compose -f docker-compose.yml restart backend; \
 	else \
 		docker compose -f docker-compose.dev.yml restart backend; \
 	fi
@@ -154,7 +155,7 @@ restart-backend: ## Restart only backend service
 restart-frontend: ## Restart only frontend service
 	@echo "${BLUE}🔄 Restarting Frontend Service${NC}"
 	@if [ "$(ENV)" = "prod" ]; then \
-		docker compose restart frontend; \
+		docker compose -f docker-compose.yml restart frontend; \
 	else \
 		docker compose -f docker-compose.dev.yml restart frontend; \
 	fi
@@ -187,7 +188,7 @@ shell-recommendations: ## Open shell in recommendation engine container
 logs-recommendations: ## View recommendation engine logs
 	@echo "${BLUE}📋 Recommendation Engine Logs${NC}"
 	@if [ "$(ENV)" = "prod" ]; then \
-		docker compose logs -f recommendation-engine; \
+		docker compose -f docker-compose.yml logs -f recommendation-engine; \
 	else \
 		docker compose -f docker-compose.dev.yml logs -f recommendation-engine; \
 	fi
@@ -195,7 +196,46 @@ logs-recommendations: ## View recommendation engine logs
 restart-recommendations: ## Restart recommendation engine service
 	@echo "${BLUE}🔄 Restarting Recommendation Engine${NC}"
 	@if [ "$(ENV)" = "prod" ]; then \
-		docker compose restart recommendation-engine; \
+		docker compose -f docker-compose.yml restart recommendation-engine; \
 	else \
 		docker compose -f docker-compose.dev.yml restart recommendation-engine; \
 	fi
+
+dev-tools: ## Start development tools (Prisma Studio, Redis Commander)
+	@echo "${BLUE}🛠️  Starting Development Tools${NC}"
+	@docker compose -f docker-compose.dev.yml --profile tools up -d prisma-studio redis-commander
+	@echo "${GREEN}✅ Development tools started:${NC}"
+	@echo "  - Prisma Studio: http://localhost:5555"
+	@echo "  - Redis Commander: http://localhost:8081"
+
+stop-tools: ## Stop development tools
+	@echo "${BLUE}🛠️  Stopping Development Tools${NC}"
+	@docker compose -f docker-compose.dev.yml --profile tools down
+
+pull: ## Pull latest images
+	@echo "${BLUE}📥 Pulling Latest Images${NC}"
+	@if [ "$(ENV)" = "prod" ]; then \
+		docker compose -f docker-compose.yml pull; \
+	else \
+		docker compose -f docker-compose.dev.yml pull; \
+	fi
+
+reset: ## Reset entire development environment (CAUTION: destroys all data)
+	@echo "${RED}⚠️  WARNING: This will destroy all data!${NC}"
+	@read -p "Are you sure? Type 'yes' to continue: " confirm && [ "$$confirm" = "yes" ] || exit 1
+	@echo "${BLUE}🔄 Resetting Development Environment${NC}"
+	@$(MAKE) clean ENV=dev
+	@docker volume prune -f
+	@$(MAKE) setup ENV=dev
+
+check-env: ## Check if environment variables are set
+	@echo "${BLUE}🔍 Checking Environment Variables${NC}"
+	@if [ ! -f .env ]; then echo "${RED}❌ .env file not found${NC}"; exit 1; fi
+	@echo "${GREEN}✅ .env file exists${NC}"
+	@echo "Environment variables:"
+	@grep -v '^#' .env | grep -v '^$$' | head -10 | sed 's/=.*/=***/' || echo "${YELLOW}⚠️  No variables found${NC}"
+
+docker-version: ## Check Docker and Docker Compose versions
+	@echo "${BLUE}🐳 Docker Version Information${NC}"
+	@docker version --format "Docker Engine: {{.Server.Version}}"
+	@docker compose version --short
