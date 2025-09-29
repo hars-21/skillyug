@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronRight, 
   Star, 
@@ -85,6 +86,46 @@ const CourseRecommendationQuiz = () => {
   const [transitionType, setTransitionType] = useState<'processing' | 'calculating' | 'generating'>('processing');
   const [isCalculatingResult, setIsCalculatingResult] = useState(false);
   const [showFullTrack, setShowFullTrack] = useState(false);
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.4 }
+    }
+  };
+
+  const cardHoverVariants = {
+    hover: { 
+      scale: 1.02,
+      y: -5,
+      transition: { duration: 0.2 }
+    }
+  };
+
+  const buttonVariants = {
+    hover: {
+      scale: 1.05,
+      transition: { duration: 0.2 }
+    },
+    tap: {
+      scale: 0.98
+    }
+  };
 
   // Handle initial loading
   useEffect(() => {
@@ -187,6 +228,7 @@ const CourseRecommendationQuiz = () => {
     setShowAffirmation(true);
     const selectedOption = questions[questionId - 1].options[optionIndex];
     
+    // 1.2 second delay for processing each question
     setTimeout(() => {
       setShowAffirmation(false);
       setIsTransitioning(false);
@@ -201,6 +243,10 @@ const CourseRecommendationQuiz = () => {
       // Show calculating animation for the last question
       if (currentStep === 7) {
         setIsCalculatingResult(true);
+        setTimeout(() => {
+          setCurrentStep(prev => prev + 1);
+          setIsAnimating(false);
+        }, 300);
       } else {
         setTimeout(() => {
           setCurrentStep(prev => prev + 1);
@@ -293,167 +339,176 @@ const CourseRecommendationQuiz = () => {
   };
 
   useEffect(() => {
-    if (currentStep === 8 && !recommendation) {
-      const result = calculateRecommendation();
-      setRecommendation(result);
+    if (currentStep === 8 && !recommendation && !isCalculatingResult) {
+      setIsCalculatingResult(true);
+      // 4.8 second delay for compiling all questions and answers
+      setTimeout(() => {
+        const result = calculateRecommendation();
+        setRecommendation(result);
+        setIsCalculatingResult(false);
+      }, 4800);
     }
-  }, [currentStep]);
+  }, [currentStep, recommendation, isCalculatingResult]);
 
   const WelcomeScreen = () => (
-    <div className="flex items-center justify-center min-h-[80vh] px-4">
-      <div className="max-w-5xl w-full">
+    <motion.div 
+      className="flex items-center justify-center min-h-screen"
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={containerVariants}
+    >
+      <motion.div 
+        className="bg-slate-900/20 backdrop-blur-lg rounded-xl p-8 max-w-4xl w-full text-white shadow-2xl border border-slate-700/50 mx-4" 
+        style={{background: "radial-gradient(circle, rgba(29, 78, 216, 0.1), rgba(2, 8, 23, 0.1) 70%)"}}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+        whileHover={{ scale: 1.02, y: -5 }}
+      >
         
-        {/* AI-Themed Welcome Container */}
-        <div className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 rounded-3xl shadow-2xl overflow-hidden">
-          
-          {/* Animated Background Elements */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-10 left-10 w-32 h-32 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full opacity-10 animate-pulse"></div>
-            <div className="absolute top-32 right-20 w-20 h-20 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full opacity-20 animate-bounce"></div>
-            <div className="absolute bottom-10 left-32 w-24 h-24 bg-gradient-to-r from-green-400 to-teal-500 rounded-full opacity-15 animate-pulse" style={{ animationDelay: '1s' }}></div>
-            <div className="absolute bottom-32 right-10 w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-25 animate-bounce" style={{ animationDelay: '0.5s' }}></div>
-          </div>
-          
-          {/* Neural Network Pattern */}
-          <div className="absolute inset-0 opacity-5">
-            <svg className="w-full h-full" viewBox="0 0 400 300">
-              <defs>
-                <linearGradient id="neuralGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#00f5ff" />
-                  <stop offset="100%" stopColor="#ff00ff" />
-                </linearGradient>
-              </defs>
-              <g stroke="url(#neuralGrad)" strokeWidth="1" fill="none">
-                <line x1="50" y1="50" x2="150" y2="100" className="animate-pulse" />
-                <line x1="150" y1="100" x2="250" y2="80" className="animate-pulse" style={{ animationDelay: '0.3s' }} />
-                <line x1="250" y1="80" x2="350" y2="120" className="animate-pulse" style={{ animationDelay: '0.6s' }} />
-                <circle cx="50" cy="50" r="5" fill="url(#neuralGrad)" className="animate-ping" />
-                <circle cx="150" cy="100" r="5" fill="url(#neuralGrad)" className="animate-ping" style={{ animationDelay: '0.3s' }} />
-                <circle cx="250" cy="80" r="5" fill="url(#neuralGrad)" className="animate-ping" style={{ animationDelay: '0.6s' }} />
-                <circle cx="350" cy="120" r="5" fill="url(#neuralGrad)" className="animate-ping" style={{ animationDelay: '0.9s' }} />
-              </g>
-            </svg>
-          </div>
-          
-          {/* Main Content */}
-          <div className="relative z-10 p-12">
-            
-            {/* AI Status Header */}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-r from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center animate-pulse">
-                    <Bot className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-ping"></div>
-                </div>
-                <div>
-                  <h3 className="text-white font-bold text-lg">AI Course Finder</h3>
-                  <p className="text-cyan-300 text-sm">Neural Engine v3.0 • Ready</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-green-300 text-sm font-medium">ONLINE</span>
-              </div>
-            </div>
-            
-            {/* Main Welcome Content */}
-            <div className="text-center mb-10">
-              <div className="relative mb-8">
-                <div className="w-24 h-24 bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-spin" style={{ animationDuration: '3s' }}>
-                  <div className="w-20 h-20 bg-gradient-to-r from-gray-900 to-gray-800 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-10 h-10 text-cyan-400 animate-pulse" />
-                  </div>
-                </div>
-                
-                {/* Floating Icons */}
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-4">
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center animate-bounce">
-                      <Code className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-500 rounded-lg flex items-center justify-center animate-bounce" style={{ animationDelay: '0.2s' }}>
-                      <Globe className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-red-500 rounded-lg flex items-center justify-center animate-bounce" style={{ animationDelay: '0.4s' }}>
-                      <Cpu className="w-4 h-4 text-white" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent mb-6 leading-tight">
-                Discover Your Perfect
-                <span className="block bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  Learning Journey
-                </span>
-              </h1>
-              
-              <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-8">
-                Our advanced AI analyzes your preferences, goals, and learning style to recommend the 
-                <span className="text-cyan-300 font-semibold"> perfect course </span> 
-                tailored just for you.
-              </p>
-              
-              {/* AI Features */}
-              <div className="grid md:grid-cols-3 gap-4 mb-10">
-                <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-xl p-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <Target className="w-6 h-6 text-white" />
-                  </div>
-                  <h4 className="text-cyan-300 font-semibold mb-2">Precision Matching</h4>
-                  <p className="text-gray-400 text-sm">97% accuracy in course recommendations</p>
-                </div>
-                
-                <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-500 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <GitBranch className="w-6 h-6 text-white" />
-                  </div>
-                  <h4 className="text-purple-300 font-semibold mb-2">Learning Paths</h4>
-                  <p className="text-gray-400 text-sm">Complete roadmap from beginner to pro</p>
-                </div>
-                
-                <div className="bg-gradient-to-r from-green-500/10 to-teal-500/10 border border-green-500/20 rounded-xl p-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-teal-500 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <Zap className="w-6 h-6 text-white" />
-                  </div>
-                  <h4 className="text-green-300 font-semibold mb-2">Instant Results</h4>
-                  <p className="text-gray-400 text-sm">Get recommendations in under 30 seconds</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Start Button */}
-            <div className="text-center">
-              <button
-                onClick={handleNext}
-                className="group relative bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-purple-600 hover:via-blue-600 hover:to-cyan-500 text-white px-12 py-5 rounded-2xl text-xl font-bold transition-all duration-500 transform hover:scale-105 shadow-2xl hover:shadow-cyan-500/25"
+        {/* Header */}
+        <motion.header 
+          className="flex justify-between items-center mb-10"
+          variants={itemVariants}
+        >
+          <motion.div 
+            className="flex items-center space-x-3"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <motion.div 
+              className="bg-blue-600 p-2 rounded-lg"
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Sparkles className="text-white text-2xl w-6 h-6" />
+            </motion.div>
+            <div>
+              <motion.h1 
+                className="font-bold text-lg text-slate-100"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative flex items-center gap-4">
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                    <Rocket className="w-5 h-5 text-white group-hover:animate-bounce" />
-                  </div>
-                  Start AI Analysis
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                </div>
-              </button>
-              
-              <p className="text-gray-400 text-sm mt-4 flex items-center justify-center gap-2">
-                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                7 smart questions • Personalized results
-              </p>
+                AI Course Finder
+              </motion.h1>
+              <motion.p 
+                className="text-sm text-slate-400"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+              >
+                Neural Engine v8.0 - Ready
+              </motion.p>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          </motion.div>
+          <motion.div 
+            className="flex items-center space-x-2"
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            <span className="text-sm font-semibold text-green-400">ONLINE</span>
+          </motion.div>
+        </motion.header>
+        
+        {/* Main Content */}
+        <motion.main className="text-center" variants={itemVariants}>
+          <motion.h2 
+            className="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-slate-200 to-slate-400"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+          >
+            Discover Your Perfect<br/>Learning Journey
+          </motion.h2>
+          <motion.p 
+            className="text-slate-400 max-w-2xl mx-auto mb-12"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            Our advanced AI analyzes your preferences, goals, and learning style to recommend the perfect course tailored just for you.
+          </motion.p>
+          
+          {/* Feature Cards */}
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {[
+              { icon: Target, color: "blue", title: "Precision Matching", desc: "97% accuracy in course recommendations" },
+              { icon: TrendingUp, color: "purple", title: "Learning Paths", desc: "Complete roadmap from beginner to expert" },
+              { icon: Zap, color: "green", title: "Instant Results", desc: "Get recommendations in under 30 seconds" }
+            ].map((item, index) => (
+              <motion.div 
+                key={index}
+                className="bg-slate-800/50 p-6 rounded-lg text-center border border-slate-700/50 cursor-pointer"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 * index + 0.4 }}
+                whileHover={{ scale: 1.02, y: -5 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <motion.div 
+                  className={`inline-block bg-${item.color}-500/20 p-3 rounded-full mb-4 border border-${item.color}-500/50`}
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <item.icon className={`text-${item.color}-400 w-8 h-8 ${item.title === "Learning Paths" ? "transform -rotate-45" : ""}`} />
+                </motion.div>
+                <motion.h3 
+                  className="font-semibold text-lg text-slate-100"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.1 * index + 0.6 }}
+                >
+                  {item.title}
+                </motion.h3>
+                <motion.p 
+                  className="text-sm text-slate-400"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.1 * index + 0.7 }}
+                >
+                  {item.desc}
+                </motion.p>
+              </motion.div>
+            ))}
+          </motion.div>
+          
+          {/* Start Button */}
+          <motion.button 
+            onClick={handleNext}
+            className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-300 shadow-lg shadow-blue-500/30 cursor-pointer"
+            variants={buttonVariants}
+            whileHover="hover"
+            whileTap="tap"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            Start AI Analysis
+          </motion.button>
+          <motion.p 
+            className="text-sm text-slate-400 mt-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+          >
+            7 smart questions - Personalized results
+          </motion.p>
+        </motion.main>
+      </motion.div>
+    </motion.div>
   );
 
   const QuestionScreen = () => {
@@ -478,108 +533,247 @@ const CourseRecommendationQuiz = () => {
     };
     
     return (
-      <div className="flex items-center justify-center min-h-[80vh] px-4">
-        <div className="max-w-5xl w-full">
+      <motion.div 
+        className="flex items-center justify-center min-h-[80vh] px-4"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        key={currentStep} // Re-trigger animation on step change
+      >
+        <motion.div className="max-w-5xl w-full" variants={itemVariants}>
           
           {/* AI Question Analysis Container */}
-          <div className="relative bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800 rounded-3xl shadow-2xl overflow-hidden">
+          <motion.div 
+            className="relative bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800 rounded-3xl shadow-2xl overflow-hidden"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          >
             
             {/* Animated Background Elements */}
             <div className="absolute inset-0 overflow-hidden">
-              <div className="absolute top-20 left-20 w-24 h-24 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full animate-pulse"></div>
-              <div className="absolute top-40 right-32 w-16 h-16 bg-gradient-to-r from-purple-400/20 to-pink-500/20 rounded-full animate-bounce"></div>
-              <div className="absolute bottom-20 left-40 w-20 h-20 bg-gradient-to-r from-green-400/20 to-teal-500/20 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+              <motion.div 
+                className="absolute top-20 left-20 w-24 h-24 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full"
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  opacity: [0.3, 0.6, 0.3]
+                }}
+                transition={{ 
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              <motion.div 
+                className="absolute top-40 right-32 w-16 h-16 bg-gradient-to-r from-purple-400/20 to-pink-500/20 rounded-full"
+                animate={{ 
+                  y: [-10, 10, -10],
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              <motion.div 
+                className="absolute bottom-20 left-40 w-20 h-20 bg-gradient-to-r from-green-400/20 to-teal-500/20 rounded-full"
+                animate={{ 
+                  scale: [1, 1.3, 1],
+                  opacity: [0.2, 0.5, 0.2]
+                }}
+                transition={{ 
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1
+                }}
+              />
             </div>
             
             {/* Progress Header */}
-            <div className="relative z-10 bg-gradient-to-r from-cyan-600/20 via-blue-600/20 to-purple-600/20 backdrop-blur-sm border-b border-gray-700/50 px-6 py-4">
+            <motion.div 
+              className="relative z-10 bg-gradient-to-r from-cyan-600/20 via-blue-600/20 to-purple-600/20 backdrop-blur-sm border-b border-gray-700/50 px-6 py-4"
+              variants={itemVariants}
+            >
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-cyan-400 to-blue-600 rounded-lg flex items-center justify-center animate-pulse">
+                <motion.div 
+                  className="flex items-center gap-3"
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <motion.div 
+                    className="w-10 h-10 bg-gradient-to-r from-cyan-400 to-blue-600 rounded-lg flex items-center justify-center"
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      rotate: [0, 360]
+                    }}
+                    transition={{ 
+                      scale: { duration: 2, repeat: Infinity },
+                      rotate: { duration: 8, repeat: Infinity, ease: "linear" }
+                    }}
+                  >
                     <Bot className="w-5 h-5 text-white" />
-                  </div>
+                  </motion.div>
                   <div>
                     <h3 className="text-white font-bold">AI Analysis Progress</h3>
                     <p className="text-cyan-300 text-sm">Question {currentStep} of 7</p>
                   </div>
-                </div>
+                </motion.div>
                 
-                <div className="text-right">
-                  <div className="text-2xl font-bold bg-gradient-to-r from-cyan-300 to-purple-300 bg-clip-text text-transparent">
+                <motion.div 
+                  className="text-right"
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <motion.div 
+                    className="text-2xl font-bold bg-gradient-to-r from-cyan-300 to-purple-300 bg-clip-text text-transparent"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+                  >
                     {Math.round((currentStep / 7) * 100)}%
-                  </div>
+                  </motion.div>
                   <p className="text-gray-400 text-sm">Complete</p>
-                </div>
+                </motion.div>
               </div>
               
               {/* Animated Progress Bar */}
-              <div className="relative">
+              <motion.div 
+                className="relative"
+                variants={itemVariants}
+              >
                 <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
-                  <div 
-                    className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 h-full rounded-full transition-all duration-700 ease-out relative"
-                    style={{ width: `${(currentStep / 7) * 100}%` }}
+                  <motion.div 
+                    className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 h-full rounded-full relative"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(currentStep / 7) * 100}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 animate-pulse"></div>
-                  </div>
+                  </motion.div>
                 </div>
                 <div className="flex justify-between mt-2">
                   {[...Array(7)].map((_, i) => (
-                    <div key={i} className="relative">
-                      <div 
+                    <motion.div 
+                      key={i} 
+                      className="relative"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.1 * i + 0.3 }}
+                    >
+                      <motion.div 
                         className={`w-3 h-3 rounded-full transition-all duration-300 ${
                           i < currentStep 
-                            ? 'bg-gradient-to-r from-cyan-400 to-purple-600 scale-125 shadow-lg shadow-cyan-400/50' 
+                            ? 'bg-gradient-to-r from-cyan-400 to-purple-600 shadow-lg shadow-cyan-400/50' 
                             : 'bg-gray-600'
                         }`}
+                        animate={i < currentStep ? { scale: [1, 1.25, 1] } : {}}
+                        transition={{ duration: 0.5 }}
                       />
                       {i < currentStep && (
-                        <div className="absolute inset-0 w-3 h-3 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full animate-ping"></div>
+                        <motion.div 
+                          className="absolute inset-0 w-3 h-3 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full"
+                          animate={{ scale: [1, 2, 1], opacity: [0.5, 0, 0.5] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        />
                       )}
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
             
             {/* Question Content */}
-            <div className="relative z-10 p-8">
+            <motion.div 
+              className="relative z-10 p-8"
+              variants={itemVariants}
+            >
               
               {/* AI Analysis Header */}
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-600/20 to-purple-600/20 border border-cyan-500/30 rounded-full px-6 py-3 mb-6">
-                  <Sparkles className="w-5 h-5 text-cyan-400 animate-pulse" />
+              <motion.div 
+                className="text-center mb-8"
+                variants={itemVariants}
+              >
+                <motion.div 
+                  className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-600/20 to-purple-600/20 border border-cyan-500/30 rounded-full px-6 py-3 mb-6"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Sparkles className="w-5 h-5 text-cyan-400" />
+                  </motion.div>
                   <span className="text-cyan-300 font-semibold">Neural Analysis Mode</span>
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                </div>
+                  <motion.div 
+                    className="w-2 h-2 bg-green-400 rounded-full"
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  />
+                </motion.div>
                 
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 leading-tight">
+                <motion.h2 
+                  className="text-2xl md:text-3xl font-bold text-white mb-4 leading-tight"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
                   {currentQuestion.question}
-                </h2>
+                </motion.h2>
                 
-                <p className="text-gray-300 text-lg">
+                <motion.p 
+                  className="text-gray-300 text-lg"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
                   Select the option that resonates most with you 🎯
-                </p>
-              </div>
+                </motion.p>
+              </motion.div>
 
               {/* Options */}
-              <div className="space-y-4 max-w-4xl mx-auto">
+              <motion.div 
+                className="space-y-4 max-w-4xl mx-auto"
+                variants={containerVariants}
+              >
                 {currentQuestion.options.map((option, index) => {
                   const trackGrad = getTrackGradient(option.track);
                   return (
-                    <button
+                    <motion.button
                       key={index}
                       onClick={() => handleAnswer(currentQuestion.id, index)}
-                      className="group w-full p-6 text-left bg-gradient-to-r from-gray-800/50 to-gray-700/50 hover:from-gray-700/70 hover:to-gray-600/70 border border-gray-600/50 hover:border-cyan-500/50 rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-cyan-500/10 backdrop-blur-sm"
+                      className="group w-full p-6 text-left bg-gradient-to-r from-gray-800/50 to-gray-700/50 hover:from-gray-700/70 hover:to-gray-600/70 border border-gray-600/50 hover:border-cyan-500/50 rounded-xl transition-all duration-300 backdrop-blur-sm cursor-pointer"
+                      variants={itemVariants}
+                      whileHover={{ 
+                        scale: 1.02, 
+                        boxShadow: "0 10px 30px rgba(6, 182, 212, 0.1)" 
+                      }}
+                      whileTap={{ scale: 0.98 }}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 * index + 0.4 }}
                     >
                       <div className="flex items-center gap-4">
                         {/* Option Number & Icon */}
                         <div className="flex-shrink-0 flex items-center gap-3">
-                          <div className={`w-12 h-12 bg-gradient-to-r ${trackGrad.bg} rounded-xl flex items-center justify-center font-bold text-white text-lg group-hover:scale-110 transition-transform duration-300`}>
+                          <motion.div 
+                            className={`w-12 h-12 bg-gradient-to-r ${trackGrad.bg} rounded-xl flex items-center justify-center font-bold text-white text-lg`}
+                            whileHover={{ scale: 1.1, rotate: 360 }}
+                            transition={{ duration: 0.3 }}
+                          >
                             {String.fromCharCode(65 + index)}
-                          </div>
-                          <div className={`w-10 h-10 bg-gradient-to-r ${trackGrad.bg} rounded-lg flex items-center justify-center group-hover:animate-bounce`}>
+                          </motion.div>
+                          <motion.div 
+                            className={`w-10 h-10 bg-gradient-to-r ${trackGrad.bg} rounded-lg flex items-center justify-center`}
+                            whileHover={{ y: -5 }}
+                            transition={{ duration: 0.2 }}
+                          >
                             {getTrackIcon(option.track)}
-                          </div>
+                          </motion.div>
                         </div>
                         
                         {/* Content */}
@@ -589,50 +783,82 @@ const CourseRecommendationQuiz = () => {
                           </p>
                           
                           {/* Track Indicator */}
-                          <div className={`inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r ${trackGrad.bg} rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300`}>
-                            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                          <motion.div 
+                            className={`inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r ${trackGrad.bg} rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300`}
+                            initial={{ scale: 0 }}
+                            whileInView={{ scale: 1 }}
+                            transition={{ delay: 0.2 }}
+                          >
+                            <motion.div 
+                              className="w-2 h-2 bg-white rounded-full"
+                              animate={{ opacity: [1, 0.3, 1] }}
+                              transition={{ duration: 1, repeat: Infinity }}
+                            />
                             <span className="text-white text-sm font-medium capitalize">
                               {option.track === 'javadsa' ? 'Java DSA' : option.track === 'webdev' ? 'Web Development' : 'Python'}
                             </span>
-                          </div>
+                          </motion.div>
                         </div>
                         
                         {/* Arrow */}
                         <div className="flex-shrink-0">
-                          <div className="w-10 h-10 bg-gradient-to-r from-gray-600 to-gray-500 group-hover:from-cyan-500 group-hover:to-blue-600 rounded-full flex items-center justify-center transition-all duration-300">
-                            <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
-                          </div>
+                          <motion.div 
+                            className="w-10 h-10 bg-gradient-to-r from-gray-600 to-gray-500 group-hover:from-cyan-500 group-hover:to-blue-600 rounded-full flex items-center justify-center transition-all duration-300"
+                            whileHover={{ rotate: 90 }}
+                          >
+                            <motion.div
+                              animate={{ x: [0, 5, 0] }}
+                              transition={{ duration: 1.5, repeat: Infinity }}
+                            >
+                              <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-white transition-all duration-300" />
+                            </motion.div>
+                          </motion.div>
                         </div>
                       </div>
-                    </button>
+                    </motion.button>
                   );
                 })}
-              </div>
+              </motion.div>
 
               {/* Navigation */}
-              <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-700/50">
-                <button
+              <motion.div 
+                className="flex justify-between items-center mt-8 pt-6 border-t border-gray-700/50"
+                variants={itemVariants}
+              >
+                <motion.button
                   onClick={handlePrevious}
                   className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
                     currentStep === 1 
                       ? 'text-gray-500 cursor-not-allowed' 
-                      : 'text-gray-300 hover:text-white hover:bg-gray-700/50 border border-gray-600/50 hover:border-gray-500/50'
+                      : 'text-gray-300 hover:text-white hover:bg-gray-700/50 border border-gray-600/50 hover:border-gray-500/50 cursor-pointer'
                   }`}
                   disabled={currentStep === 1}
+                  whileHover={currentStep !== 1 ? { scale: 1.05 } : {}}
+                  whileTap={currentStep !== 1 ? { scale: 0.95 } : {}}
                 >
                   <ArrowLeft className="w-5 h-5" />
                   Previous
-                </button>
+                </motion.button>
                 
-                <div className="flex items-center gap-2 text-gray-400">
-                  <Zap className="w-4 h-4 text-cyan-400 animate-pulse" />
+                <motion.div 
+                  className="flex items-center gap-2 text-gray-400"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Zap className="w-4 h-4 text-cyan-400" />
+                  </motion.div>
                   <span className="text-sm font-medium">Click any option to continue</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     );
   };
 
@@ -679,118 +905,339 @@ const CourseRecommendationQuiz = () => {
     const trackDetails = getTrackDetails(recommendation.track);
 
     return (
-      <div className="flex items-center justify-center min-h-[80vh] px-4">
-        <div className="max-w-6xl w-full">
+      <motion.div 
+        className="flex items-center justify-center min-h-[80vh] px-4"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        <motion.div className="max-w-6xl w-full" variants={itemVariants}>
           
           {/* AI Result Container */}
-          <div className="relative bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800 rounded-3xl shadow-2xl overflow-hidden">
+          <motion.div 
+            className="relative bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800 rounded-3xl shadow-2xl overflow-hidden"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: "backOut" }}
+          >
             
             {/* Celebration Background Elements */}
             <div className="absolute inset-0 overflow-hidden">
-              <div className="absolute top-10 left-10 w-32 h-32 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full animate-pulse"></div>
-              <div className="absolute top-20 right-20 w-24 h-24 bg-gradient-to-r from-purple-400/20 to-pink-500/20 rounded-full animate-bounce"></div>
-              <div className="absolute bottom-20 left-32 w-28 h-28 bg-gradient-to-r from-green-400/20 to-teal-500/20 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
-              <div className="absolute bottom-10 right-10 w-20 h-20 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }}></div>
+              <motion.div 
+                className="absolute top-10 left-10 w-32 h-32 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full"
+                animate={{ 
+                  scale: [1, 1.3, 1],
+                  opacity: [0.3, 0.7, 0.3]
+                }}
+                transition={{ 
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              <motion.div 
+                className="absolute top-20 right-20 w-24 h-24 bg-gradient-to-r from-purple-400/20 to-pink-500/20 rounded-full"
+                animate={{ 
+                  y: [0, -20, 0],
+                  scale: [1, 1.2, 1]
+                }}
+                transition={{ 
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              <motion.div 
+                className="absolute bottom-20 left-32 w-28 h-28 bg-gradient-to-r from-green-400/20 to-teal-500/20 rounded-full"
+                animate={{ 
+                  scale: [1, 1.4, 1],
+                  opacity: [0.2, 0.6, 0.2]
+                }}
+                transition={{ 
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1
+                }}
+              />
+              <motion.div 
+                className="absolute bottom-10 right-10 w-20 h-20 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 rounded-full"
+                animate={{ 
+                  x: [0, 15, 0],
+                  y: [0, -15, 0]
+                }}
+                transition={{ 
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.5
+                }}
+              />
             </div>
             
             {/* Success Header */}
-            <div className="relative z-10 bg-gradient-to-r from-green-600/20 via-blue-600/20 to-purple-600/20 backdrop-blur-sm border-b border-gray-700/50 p-8">
+            <motion.div 
+              className="relative z-10 bg-gradient-to-r from-green-600/20 via-blue-600/20 to-purple-600/20 backdrop-blur-sm border-b border-gray-700/50 p-8"
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+            >
               <div className="text-center">
-                <div className="relative inline-block mb-6">
-                  <div className={`w-24 h-24 bg-gradient-to-r ${trackDetails.gradient} rounded-2xl flex items-center justify-center mx-auto animate-bounce`}>
+                <motion.div 
+                  className="relative inline-block mb-6"
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.5, duration: 0.8, type: "spring", stiffness: 200 }}
+                >
+                  <motion.div 
+                    className={`w-24 h-24 bg-gradient-to-r ${trackDetails.gradient} rounded-2xl flex items-center justify-center mx-auto`}
+                    animate={{ 
+                      y: [0, -10, 0],
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
                     <span className="text-4xl">{trackDetails.emoji}</span>
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-400 rounded-full flex items-center justify-center animate-ping">
+                  </motion.div>
+                  
+                  <motion.div 
+                    className="absolute -top-2 -right-2 w-8 h-8 bg-green-400 rounded-full flex items-center justify-center"
+                    animate={{ 
+                      scale: [1, 1.5, 1],
+                      opacity: [1, 0.3, 1]
+                    }}
+                    transition={{ 
+                      duration: 1.5,
+                      repeat: Infinity
+                    }}
+                  >
                     <CheckCircle className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center animate-pulse">
+                  </motion.div>
+                  
+                  <motion.div 
+                    className="absolute -bottom-2 -left-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center"
+                    animate={{ 
+                      rotate: 360,
+                      scale: [1, 1.3, 1]
+                    }}
+                    transition={{ 
+                      rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+                      scale: { duration: 1, repeat: Infinity }
+                    }}
+                  >
                     <Sparkles className="w-4 h-4 text-yellow-900" />
-                  </div>
-                </div>
+                  </motion.div>
+                </motion.div>
                 
-                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent mb-4">
+                <motion.h1 
+                  className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent mb-4"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7, duration: 0.6 }}
+                >
                   Perfect Match Found! 🎉
-                </h1>
+                </motion.h1>
                 
-                <div className="inline-flex items-center gap-3 bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-400/30 rounded-full px-6 py-3 mb-4">
+                <motion.div 
+                  className="inline-flex items-center gap-3 bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-400/30 rounded-full px-6 py-3 mb-4"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.9, type: "spring", stiffness: 200 }}
+                >
                   <div className="relative">
-                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                    <div className="absolute inset-0 w-3 h-3 bg-green-400 rounded-full animate-ping"></div>
+                    <motion.div 
+                      className="w-3 h-3 bg-green-400 rounded-full"
+                      animate={{ opacity: [1, 0.3, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    />
+                    <motion.div 
+                      className="absolute inset-0 w-3 h-3 bg-green-400 rounded-full"
+                      animate={{ scale: [1, 2, 1], opacity: [0.5, 0, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
                   </div>
                   <span className="text-green-300 font-bold text-lg">97% Match Confidence</span>
-                  <Trophy className="w-5 h-5 text-yellow-400 animate-bounce" />
-                </div>
+                  <motion.div
+                    animate={{ 
+                      y: [0, -5, 0],
+                      rotate: [0, 10, -10, 0]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <Trophy className="w-5 h-5 text-yellow-400" />
+                  </motion.div>
+                </motion.div>
                 
-                <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+                <motion.p 
+                  className="text-xl text-gray-300 max-w-3xl mx-auto"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.1 }}
+                >
                   Our AI has analyzed your preferences and found your ideal learning path
-                </p>
+                </motion.p>
               </div>
-            </div>
+            </motion.div>
             
             {/* Main Recommendation */}
-            <div className="relative z-10 p-8">
+            <motion.div 
+              className="relative z-10 p-8"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
               
               {/* Course Recommendation Card */}
-              <div className={`bg-gradient-to-r ${trackDetails.bgColor} border ${trackDetails.borderColor} rounded-2xl p-8 mb-8 backdrop-blur-sm`}>
+              <motion.div 
+                className={`bg-gradient-to-r ${trackDetails.bgColor} border ${trackDetails.borderColor} rounded-2xl p-8 mb-8 backdrop-blur-sm cursor-pointer`}
+                variants={itemVariants}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+              >
                 <div className="flex items-start gap-6">
-                  <div className={`w-20 h-20 bg-gradient-to-r ${trackDetails.gradient} rounded-2xl flex items-center justify-center flex-shrink-0 animate-pulse`}>
+                  <motion.div 
+                    className={`w-20 h-20 bg-gradient-to-r ${trackDetails.gradient} rounded-2xl flex items-center justify-center flex-shrink-0`}
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      rotate: [0, 5, -5, 0]
+                    }}
+                    transition={{ 
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
                     <span className="text-3xl">{trackDetails.emoji}</span>
-                  </div>
+                  </motion.div>
                   
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
-                      <h2 className="text-3xl font-bold text-white">{recommendation.title}</h2>
-                      <span className={`px-4 py-2 bg-gradient-to-r ${trackDetails.gradient} text-white text-sm font-bold rounded-full animate-pulse`}>
+                      <motion.h2 
+                        className="text-3xl font-bold text-white"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 1.3 }}
+                      >
+                        {recommendation.title}
+                      </motion.h2>
+                      <motion.span 
+                        className={`px-4 py-2 bg-gradient-to-r ${trackDetails.gradient} text-white text-sm font-bold rounded-full`}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 1.5, type: "spring", stiffness: 200 }}
+                        animate-pulse
+                      >
                         RECOMMENDED
-                      </span>
+                      </motion.span>
                     </div>
                     
-                    <p className={`${trackDetails.textColor} text-sm font-medium mb-3 tracking-wider`}>
+                    <motion.p 
+                      className={`${trackDetails.textColor} text-sm font-medium mb-3 tracking-wider`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 1.4 }}
+                    >
                       {trackDetails.label}
-                    </p>
+                    </motion.p>
                     
-                    <p className="text-gray-300 text-lg leading-relaxed mb-6">
+                    <motion.p 
+                      className="text-gray-300 text-lg leading-relaxed mb-6"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 1.6 }}
+                    >
                       {recommendation.description}
-                    </p>
+                    </motion.p>
                     
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-gray-700/50">
-                        <Clock className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
-                        <p className="text-white font-bold">{recommendation.duration}</p>
-                        <p className="text-gray-400 text-sm">Duration</p>
-                      </div>
-                      <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-gray-700/50">
-                        <TrendingUp className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                        <p className="text-white font-bold">{recommendation.level || 'Beginner'}</p>
-                        <p className="text-gray-400 text-sm">Level</p>
-                      </div>
-                      <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-gray-700/50">
-                        <Users className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-                        <p className="text-white font-bold">{recommendation.students_count}+</p>
-                        <p className="text-gray-400 text-sm">Students</p>
-                      </div>
-                      <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-gray-700/50">
-                        <Star className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-                        <p className="text-white font-bold">{recommendation.rating}/5</p>
-                        <p className="text-gray-400 text-sm">Rating</p>
-                      </div>
-                    </div>
+                    <motion.div 
+                      className="grid grid-cols-2 md:grid-cols-4 gap-4"
+                      variants={containerVariants}
+                    >
+                      {[
+                        { icon: Clock, label: 'Duration', value: recommendation.duration, color: 'text-cyan-400' },
+                        { icon: TrendingUp, label: 'Level', value: recommendation.level || 'Beginner', color: 'text-green-400' },
+                        { icon: Users, label: 'Students', value: `${recommendation.students_count}+`, color: 'text-purple-400' },
+                        { icon: Star, label: 'Rating', value: `${recommendation.rating}/5`, color: 'text-yellow-400' }
+                      ].map((stat, index) => (
+                        <motion.div 
+                          key={stat.label}
+                          className="bg-gray-800/50 rounded-lg p-4 text-center border border-gray-700/50"
+                          variants={itemVariants}
+                          whileHover={{ 
+                            scale: 1.05,
+                            backgroundColor: "rgba(0,0,0,0.3)"
+                          }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <motion.div
+                            animate={{ 
+                              scale: [1, 1.2, 1],
+                              rotate: index % 2 === 0 ? [0, 10, 0] : [0, -10, 0]
+                            }}
+                            transition={{ 
+                              duration: 2,
+                              repeat: Infinity,
+                              delay: index * 0.2
+                            }}
+                          >
+                            <stat.icon className={`w-6 h-6 ${stat.color} mx-auto mb-2`} />
+                          </motion.div>
+                          <p className="text-white font-bold">{stat.value}</p>
+                          <p className="text-gray-400 text-sm">{stat.label}</p>
+                        </motion.div>
+                      ))}
+                    </motion.div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
               
               {/* Learning Journey */}
-              <div className="mb-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <GitBranch className="w-6 h-6 text-cyan-400" />
+              <motion.div 
+                className="mb-8"
+                variants={itemVariants}
+              >
+                <motion.div 
+                  className="flex items-center gap-3 mb-6"
+                  initial={{ x: -30, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 1.8 }}
+                >
+                  <motion.div
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  >
+                    <GitBranch className="w-6 h-6 text-cyan-400" />
+                  </motion.div>
                   <h3 className="text-2xl font-bold text-white">Your Learning Journey</h3>
-                  <div className="w-6 h-6 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full flex items-center justify-center">
+                  <motion.div 
+                    className="w-6 h-6 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full flex items-center justify-center"
+                    animate={{ 
+                      scale: [1, 1.2, 1],
+                      boxShadow: [
+                        "0 0 0 rgba(6, 182, 212, 0)",
+                        "0 0 20px rgba(6, 182, 212, 0.5)",
+                        "0 0 0 rgba(6, 182, 212, 0)"
+                      ]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
                     <span className="text-white text-xs font-bold">AI</span>
-                  </div>
-                </div>
+                  </motion.div>
+                </motion.div>
                 
-                <div className="grid gap-6 md:grid-cols-3">
+                <motion.div 
+                  className="grid gap-6 md:grid-cols-3"
+                  variants={containerVariants}
+                >
                   {['beginner', 'intermediate', 'advanced'].map((level, index) => {
                     const levelContent = {
                       beginner: `Start your ${trackDetails.label.toLowerCase()} journey with fundamentals and core concepts.`,
@@ -799,14 +1246,26 @@ const CourseRecommendationQuiz = () => {
                     };
                     
                     return (
-                      <div 
+                      <motion.div 
                         key={level} 
-                        className="group bg-gradient-to-br from-gray-800/50 to-gray-700/50 border border-gray-600/50 hover:border-cyan-500/50 rounded-xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-cyan-500/10 backdrop-blur-sm"
+                        className="group bg-gradient-to-br from-gray-800/50 to-gray-700/50 border border-gray-600/50 hover:border-cyan-500/50 rounded-xl p-6 transition-all duration-300 backdrop-blur-sm cursor-pointer"
+                        variants={itemVariants}
+                        whileHover={{ 
+                          scale: 1.05,
+                          boxShadow: "0 10px 30px rgba(6, 182, 212, 0.1)"
+                        }}
                       >
                         <div className="flex items-center gap-3 mb-4">
-                          <div className={`w-12 h-12 bg-gradient-to-r ${trackDetails.gradient} rounded-lg flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300`}>
+                          <motion.div 
+                            className={`w-12 h-12 bg-gradient-to-r ${trackDetails.gradient} rounded-lg flex items-center justify-center text-2xl`}
+                            whileHover={{ 
+                              scale: 1.2,
+                              rotate: 360
+                            }}
+                            transition={{ duration: 0.5 }}
+                          >
                             {level === 'beginner' ? '🌱' : level === 'intermediate' ? '🌿' : '🌳'}
-                          </div>
+                          </motion.div>
                           <div>
                             <h4 className="text-lg font-bold text-white capitalize">
                               {level} Level
@@ -822,52 +1281,101 @@ const CourseRecommendationQuiz = () => {
                         {/* Progress Indicator */}
                         <div className="flex items-center gap-1">
                           {[...Array(index + 1)].map((_, i) => (
-                            <div key={i} className={`w-3 h-3 bg-gradient-to-r ${trackDetails.gradient} rounded-full animate-pulse`} style={{ animationDelay: `${i * 0.2}s` }}></div>
+                            <motion.div 
+                              key={i} 
+                              className={`w-3 h-3 bg-gradient-to-r ${trackDetails.gradient} rounded-full`}
+                              animate={{ 
+                                scale: [1, 1.3, 1],
+                                opacity: [0.7, 1, 0.7]
+                              }}
+                              transition={{ 
+                                duration: 1.5,
+                                repeat: Infinity,
+                                delay: i * 0.2
+                              }}
+                            />
                           ))}
                           {[...Array(3 - index - 1)].map((_, i) => (
                             <div key={i} className="w-3 h-3 bg-gray-600 rounded-full"></div>
                           ))}
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })}
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
               
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <button className="group relative bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-purple-600 hover:via-blue-600 hover:to-cyan-500 text-white px-10 py-4 rounded-xl text-lg font-bold transition-all duration-500 transform hover:scale-105 shadow-2xl hover:shadow-cyan-500/25">
+              <motion.div 
+                className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+                variants={containerVariants}
+              >
+                <motion.button 
+                  className="group relative bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-purple-600 hover:via-blue-600 hover:to-cyan-500 text-white px-10 py-4 rounded-xl text-lg font-bold transition-all duration-500 shadow-2xl cursor-pointer"
+                  variants={itemVariants}
+                  whileHover={{ 
+                    scale: 1.05,
+                    boxShadow: "0 15px 35px rgba(6, 182, 212, 0.25)"
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   <div className="relative flex items-center gap-3">
-                    <Rocket className="w-6 h-6 group-hover:animate-bounce" />
+                    <motion.div
+                      animate={{ 
+                        y: [0, -3, 0],
+                        rotate: [0, 10, -10, 0]
+                      }}
+                      transition={{ 
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <Rocket className="w-6 h-6" />
+                    </motion.div>
                     Start Learning Journey
                   </div>
-                </button>
+                </motion.button>
                 
-                <button 
+                <motion.button 
                   onClick={() => {
                     setCurrentStep(0);
                     setAnswers({});
                     setRecommendation(null);
                   }}
-                  className="group border-2 border-gray-600 hover:border-cyan-500 text-gray-300 hover:text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center gap-3 backdrop-blur-sm"
+                  className="group border-2 border-gray-600 hover:border-cyan-500 text-gray-300 hover:text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center gap-3 backdrop-blur-sm cursor-pointer"
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <RotateCcw className="w-5 h-5 group-hover:animate-spin" />
+                  <motion.div
+                    whileHover={{ rotate: -360 }}
+                    transition={{ duration: 0.8 }}
+                  >
+                    <RotateCcw className="w-5 h-5" />
+                  </motion.div>
                   Take Quiz Again
-                </button>
+                </motion.button>
                 
                 <Link
                   href="/courses"
-                  className="group border-2 border-gray-600 hover:border-purple-500 text-gray-300 hover:text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center gap-3 backdrop-blur-sm"
+                  className="group border-2 border-gray-600 hover:border-purple-500 text-gray-300 hover:text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center gap-3 backdrop-blur-sm cursor-pointer"
                 >
-                  View All Courses
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                  <motion.div 
+                    className="flex items-center gap-3"
+                    whileHover={{ x: 5 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    View All Courses
+                    <ArrowRight className="w-5 h-5" />
+                  </motion.div>
                 </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     );
   };
 
@@ -935,15 +1443,9 @@ const CourseRecommendationQuiz = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-900 to-indigo-900 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-      </div>
+    <div className="bg-slate-950 text-slate-100 flex items-center justify-center min-h-screen">
       
-      <div className="flex flex-col min-h-screen relative z-10">
+      <div className="flex flex-col min-h-screen relative z-10 w-full">
         {/* Header */}
         <header className="border-b border-white/20 bg-black/20 backdrop-blur-sm sticky top-0 z-10">
           <div className="max-w-6xl mx-auto px-6 py-4">
@@ -976,7 +1478,7 @@ const CourseRecommendationQuiz = () => {
         </header>
         
         {/* Main Content */}
-        <main className="flex-1 py-10 px-4 relative">
+        <main className="flex-1 relative">
           {isInitialLoading ? (
             // Show skeleton loaders during initial load
             <>
