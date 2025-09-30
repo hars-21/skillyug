@@ -21,7 +21,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Change ownership to nextjs user
-RUN chown -R nextjs:nodejs /app
+RUN mkdir -p /app/.next && chown -R nextjs:nodejs /app
 
 # Switch to non-root user
 USER nextjs
