@@ -12,7 +12,8 @@ import {
   BookOpen,
   Minus
 } from 'lucide-react';
-import { adminCourseAPI, CreateCourseInput } from '@/utils/apiAdmin';
+import { useCreateCourse } from '@/hooks/useAdminApi';
+import { CreateCourseInput } from '@/utils/apiAdmin';
 
 interface FormErrors {
   [key: string]: string;
@@ -48,15 +49,14 @@ export default function NewCoursePage() {
   });
   
   const [errors, setErrors] = useState<FormErrors>({});
-  const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-
+  const createCourseMutation = useCreateCourse();
 
   const categories = [
     'PROGRAMMING',
     'WEB_DEVELOPMENT',
-    'MOBILE_DEVELOPMENT', 
+    'MOBILE_DEVELOPMENT',
     'DATA_SCIENCE',
     'ARTIFICIAL_INTELLIGENCE',
     'CLOUD_COMPUTING',
@@ -114,12 +114,11 @@ export default function NewCoursePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
-    setLoading(true);
     setSubmitError(null);
 
     try {
@@ -140,18 +139,13 @@ export default function NewCoursePage() {
         instructor: formData.instructor || 'SkillyUG Team',
       };
 
-      const response = await adminCourseAPI.create(cleanedData);
-      
-      if (response.status === 'success') {
-        router.push('/admin/courses');
-      } else {
-        setSubmitError(response.message || 'Failed to create course');
-      }
+      await createCourseMutation.mutateAsync(cleanedData);
+
+      // Success - redirect to courses page
+      router.push('/admin/courses');
     } catch (error) {
       console.error('Error creating course:', error);
       setSubmitError('An unexpected error occurred. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -223,6 +217,21 @@ export default function NewCoursePage() {
               </div>
             )}
 
+            {/* Mutation Error */}
+            {createCourseMutation.error && (
+              <div className="rounded-lg p-4 border border-red-300 flex items-start" style={{background: '#FEF2F2'}}>
+                <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
+                <div>
+                  <h3 className="text-sm font-medium text-red-800">Error creating course</h3>
+                  <p className="text-sm text-red-700 mt-1">
+                    {createCourseMutation.error instanceof Error
+                      ? createCourseMutation.error.message
+                      : 'An unexpected error occurred. Please try again.'}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Basic Information */}
             <div className="rounded-lg shadow-sm border border-white/10 p-6" style={{background: '#051C7F'}}>
               <div className="flex items-center mb-6">
@@ -245,7 +254,7 @@ export default function NewCoursePage() {
                       errors.courseName ? 'border-red-300' : 'border-white/20'
                     }`}
                     placeholder="e.g., Python Beginner Course"
-                    disabled={loading}
+                    disabled={createCourseMutation.isPending}
                   />
                   {errors.courseName && (
                     <p className="text-sm text-red-300 mt-1">{errors.courseName}</p>
@@ -266,7 +275,7 @@ export default function NewCoursePage() {
                       errors.description ? 'border-red-300' : 'border-white/20'
                     }`}
                     placeholder="Describe what students will learn in this course"
-                    disabled={loading}
+                    disabled={createCourseMutation.isPending}
                   />
                   {errors.description && (
                     <p className="text-sm text-red-300 mt-1">{errors.description}</p>
@@ -289,7 +298,7 @@ export default function NewCoursePage() {
                       className={`w-full px-4 py-3 border rounded-lg bg-white/10 text-white focus:ring-2 focus:ring-white/20 focus:border-transparent transition-colors ${
                         errors.category ? 'border-red-300' : 'border-white/20'
                       }`}
-                      disabled={loading}
+                      disabled={createCourseMutation.isPending}
                     >
                       <option value="" className="text-gray-900">Select a category</option>
                       {categories.map((category) => (
@@ -316,7 +325,7 @@ export default function NewCoursePage() {
                       className={`w-full px-4 py-3 border rounded-lg bg-white/10 text-white focus:ring-2 focus:ring-white/20 focus:border-transparent transition-colors ${
                         errors.difficulty ? 'border-red-300' : 'border-white/20'
                       }`}
-                      disabled={loading}
+                      disabled={createCourseMutation.isPending}
                     >
                       <option value="" className="text-gray-900">Select difficulty</option>
                       {difficulties.map((difficulty) => (
@@ -344,7 +353,7 @@ export default function NewCoursePage() {
                         errors.durationHours ? 'border-red-300' : 'border-white/20'
                       }`}
                       placeholder="e.g., 22"
-                      disabled={loading}
+                      disabled={createCourseMutation.isPending}
                     />
                     {errors.durationHours && (
                       <p className="text-sm text-red-300 mt-1">{errors.durationHours}</p>
@@ -369,7 +378,7 @@ export default function NewCoursePage() {
                         errors.price ? 'border-red-300' : 'border-white/20'
                       }`}
                       placeholder="0"
-                      disabled={loading}
+                      disabled={createCourseMutation.isPending}
                     />
                     {errors.price && (
                       <p className="text-sm text-red-300 mt-1">{errors.price}</p>
@@ -393,7 +402,7 @@ export default function NewCoursePage() {
                         errors.token ? 'border-red-300' : 'border-white/20'
                       }`}
                       placeholder="0"
-                      disabled={loading}
+                      disabled={createCourseMutation.isPending}
                     />
                     {errors.token && (
                       <p className="text-sm text-red-300 mt-1">{errors.token}</p>
@@ -412,7 +421,7 @@ export default function NewCoursePage() {
                       value={formData.language || 'English'}
                       onChange={(e) => handleInputChange('language', e.target.value)}
                       className="w-full px-4 py-3 border rounded-lg bg-white/10 text-white focus:ring-2 focus:ring-white/20 focus:border-transparent transition-colors border-white/20"
-                      disabled={loading}
+                      disabled={createCourseMutation.isPending}
                     >
                       <option value="English" className="text-gray-900">English</option>
                       <option value="Hindi" className="text-gray-900">Hindi</option>
@@ -435,7 +444,7 @@ export default function NewCoursePage() {
                         errors.instructor ? 'border-red-300' : 'border-white/20'
                       }`}
                       placeholder="Instructor name"
-                      disabled={loading}
+                      disabled={createCourseMutation.isPending}
                     />
                     {errors.instructor && (
                       <p className="text-sm text-red-300 mt-1">{errors.instructor}</p>
@@ -455,7 +464,7 @@ export default function NewCoursePage() {
                     onChange={(e) => handleInputChange('imageUrl', e.target.value)}
                     className="w-full px-4 py-3 border rounded-lg bg-white/10 text-white placeholder-white/60 focus:ring-2 focus:ring-white/20 focus:border-transparent transition-colors border-white/20"
                     placeholder="https://example.com/course-image.jpg"
-                    disabled={loading}
+                    disabled={createCourseMutation.isPending}
                   />
                   <p className="text-sm text-white/60 mt-1">
                     URL to the course thumbnail image
@@ -472,7 +481,7 @@ export default function NewCoursePage() {
                         checked={formData.isActive ?? true}
                         onChange={(e) => handleInputChange('isActive', e.target.checked)}
                         className="w-4 h-4 text-orange-600 bg-white/10 border-white/20 rounded focus:ring-orange-500 focus:ring-2"
-                        disabled={loading}
+                        disabled={createCourseMutation.isPending}
                       />
                     </div>
                     <div className="ml-3">
@@ -493,7 +502,7 @@ export default function NewCoursePage() {
                         checked={formData.isFeatured ?? false}
                         onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
                         className="w-4 h-4 text-orange-600 bg-white/10 border-white/20 rounded focus:ring-orange-500 focus:ring-2"
-                        disabled={loading}
+                        disabled={createCourseMutation.isPending}
                       />
                     </div>
                     <div className="ml-3">
@@ -525,13 +534,13 @@ export default function NewCoursePage() {
                       onChange={(e) => updateArrayItem('learningOutcomes', index, e.target.value)}
                       className="flex-1 px-4 py-3 border rounded-lg bg-white/10 text-white placeholder-white/60 focus:ring-2 focus:ring-white/20 focus:border-transparent transition-colors border-white/20"
                       placeholder="What will students learn?"
-                      disabled={loading}
+                      disabled={createCourseMutation.isPending}
                     />
                     <button
                       type="button"
                       onClick={() => removeArrayItem('learningOutcomes', index)}
                       className="p-2 text-red-300 hover:text-red-500 transition-colors"
-                      disabled={loading}
+                      disabled={createCourseMutation.isPending}
                     >
                       <Minus className="w-5 h-5" />
                     </button>
@@ -542,7 +551,7 @@ export default function NewCoursePage() {
                   onClick={() => addArrayItem('learningOutcomes')}
                   className="flex items-center px-4 py-2 text-white rounded-lg transition-colors hover:opacity-80"
                   style={{background: '#EB8216'}}
-                  disabled={loading}
+                  disabled={createCourseMutation.isPending}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Learning Outcome
@@ -566,13 +575,13 @@ export default function NewCoursePage() {
                       onChange={(e) => updateArrayItem('benefits', index, e.target.value)}
                       className="flex-1 px-4 py-3 border rounded-lg bg-white/10 text-white placeholder-white/60 focus:ring-2 focus:ring-white/20 focus:border-transparent transition-colors border-white/20"
                       placeholder="Course benefit (e.g., Certificate of Completion)"
-                      disabled={loading}
+                      disabled={createCourseMutation.isPending}
                     />
                     <button
                       type="button"
                       onClick={() => removeArrayItem('benefits', index)}
                       className="p-2 text-red-300 hover:text-red-500 transition-colors"
-                      disabled={loading}
+                      disabled={createCourseMutation.isPending}
                     >
                       <Minus className="w-5 h-5" />
                     </button>
@@ -583,7 +592,7 @@ export default function NewCoursePage() {
                   onClick={() => addArrayItem('benefits')}
                   className="flex items-center px-4 py-2 text-white rounded-lg transition-colors hover:opacity-80"
                   style={{background: '#EB8216'}}
-                  disabled={loading}
+                  disabled={createCourseMutation.isPending}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Benefit
@@ -596,18 +605,18 @@ export default function NewCoursePage() {
               <button
                 type="button"
                 onClick={() => router.push('/admin/courses')}
-                disabled={loading}
+                disabled={createCourseMutation.isPending}
                 className="px-6 py-3 border border-white/20 text-white rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={createCourseMutation.isPending}
                 className="px-6 py-3 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center"
                 style={{background: '#EB8216'}}
               >
-                {loading ? (
+                {createCourseMutation.isPending ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                     Creating Course...

@@ -13,7 +13,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import Link from 'next/link';
-import { adminCourseAPI, adminUserAPI } from '@/utils/apiAdmin';
+import { useCourses, useUsers } from '@/hooks/useAdminApi';
 
 interface DashboardStats {
   totalUsers: number;
@@ -34,102 +34,74 @@ interface RecentActivity {
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalUsers: 0,
-    totalCourses: 0,
-    totalRevenue: 0,
-    monthlyGrowth: 0,
-    featuredCourses: 0,
-    activePurchases: 0
-  });
+  const coursesQuery = useCourses({ page: 1, limit: 1 });
+  const usersQuery = useUsers({ page: 1, limit: 1 });
+
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Load basic stats
-      const [coursesResponse, usersResponse] = await Promise.all([
-        adminCourseAPI.getAll({ page: 1, limit: 1 }),
-        adminUserAPI.getAll({ page: 1, limit: 1 })
-      ]);
-
-      if (coursesResponse.status === 'success' && usersResponse.status === 'success') {
-        setStats(prev => ({
-          ...prev,
-          totalCourses: coursesResponse.meta?.pagination?.total || 3, // Python courses
-          totalUsers: usersResponse.meta?.pagination?.total || 156,
-          totalRevenue: 187500, // Based on course sales (₹1299, ₹1899, ₹2599)
-          monthlyGrowth: 18.5, // Growing Python demand
-          featuredCourses: 3, // All Python courses are featured
-          activePurchases: 89 // Active enrollments
-        }));
-      }
-
-      // Recent activity based on Python course offerings
-      setRecentActivity([
-        {
-          id: '1',
-          type: 'course_purchase',
-          description: 'Python Pro Bundle purchased',
-          timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-          user: 'rahul.sharma@gmail.com',
-          course: 'Python Pro Bundle (₹2599)'
-        },
-        {
-          id: '2',
-          type: 'user_registration',
-          description: 'New user registered for Python course',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          user: 'priya.patel@gmail.com'
-        },
-        {
-          id: '3',
-          type: 'course_purchase',
-          description: 'Python Beginner course purchased',
-          timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-          user: 'amit.kumar@yahoo.com',
-          course: 'Python Beginner (₹1299)'
-        },
-        {
-          id: '4',
-          type: 'course_purchase',
-          description: 'Python Bundle (Beginner → Intermediate) purchased',
-          timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-          user: 'sneha.agarwal@outlook.com',
-          course: 'Python Bundle (₹1899)'
-        },
-        {
-          id: '5',
-          type: 'user_registration',
-          description: 'New user registered',
-          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-          user: 'vikash.singh@gmail.com'
-        },
-        {
-          id: '6',
-          type: 'course_purchase',
-          description: 'Python Pro Bundle purchased with scholarship test',
-          timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-          user: 'anjali.verma@gmail.com',
-          course: 'Python Pro Bundle (₹2599)'
-        }
-      ]);
-
-    } catch (err) {
-      console.error('Failed to load dashboard data:', err);
-      setError('Failed to load dashboard data');
-    } finally {
-      setLoading(false);
-    }
+  const stats: DashboardStats = {
+    totalUsers: usersQuery.data?.meta?.pagination?.total || 156,
+    totalCourses: coursesQuery.data?.meta?.pagination?.total || 3,
+    totalRevenue: 187500, // Based on course sales (₹1299, ₹1899, ₹2599)
+    monthlyGrowth: 18.5, // Growing Python demand
+    featuredCourses: 3, // All Python courses are featured
+    activePurchases: 89 // Active enrollments
   };
+
+  const isLoading = coursesQuery.isLoading || usersQuery.isLoading;
+  const error = coursesQuery.error || usersQuery.error;
+
+  // Initialize recent activity on mount
+  useEffect(() => {
+    setRecentActivity([
+      {
+        id: '1',
+        type: 'course_purchase',
+        description: 'Python Pro Bundle purchased',
+        timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+        user: 'rahul.sharma@gmail.com',
+        course: 'Python Pro Bundle (₹2599)'
+      },
+      {
+        id: '2',
+        type: 'user_registration',
+        description: 'New user registered for Python course',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        user: 'priya.patel@gmail.com'
+      },
+      {
+        id: '3',
+        type: 'course_purchase',
+        description: 'Python Beginner course purchased',
+        timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+        user: 'amit.kumar@yahoo.com',
+        course: 'Python Beginner (₹1299)'
+      },
+      {
+        id: '4',
+        type: 'course_purchase',
+        description: 'Python Bundle (Beginner → Intermediate) purchased',
+        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+        user: 'sneha.agarwal@outlook.com',
+        course: 'Python Bundle (₹1899)'
+      },
+      {
+        id: '5',
+        type: 'user_registration',
+        description: 'New user registered',
+        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+        user: 'vikash.singh@gmail.com'
+      },
+      {
+        id: '6',
+        type: 'course_purchase',
+        description: 'Python Pro Bundle purchased with scholarship test',
+        timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+        user: 'anjali.verma@gmail.com',
+        course: 'Python Pro Bundle (₹2599)'
+      }
+    ]);
+  }, []);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -162,7 +134,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="p-6">
         <div className="animate-pulse">
@@ -203,7 +175,7 @@ export default function AdminDashboard() {
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-          {error}
+          {error instanceof Error ? error.message : 'Failed to load dashboard data'}
         </div>
       )}
 
