@@ -148,7 +148,7 @@ function LoginForm() {
           
           // Redirect based on user role
           if (checkData.user?.role === 'ADMIN') {
-            router.push('/admin/dashboard');
+            router.push('/admin');
           } else {
             router.push('/dashboard');
           }
@@ -302,7 +302,7 @@ function LoginForm() {
         <div className="text-center text-sm text-gray-600">
           Don&apos;t have an account?{' '}
           <Link 
-            href="/register" 
+            href="/sign-up" 
             className="font-medium text-blue-600 hover:text-blue-500 hover:underline"
           >
             Create one here
