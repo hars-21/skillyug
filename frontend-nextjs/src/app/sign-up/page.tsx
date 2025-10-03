@@ -143,34 +143,6 @@ const SignUp = () => {
                   </p>
                 )}
               </div>
-
-              {/* User Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">I am a:</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {['student', 'instructor', 'admin'].map((type) => (
-                    <label key={type} className="relative cursor-pointer">
-                      <input {...register('userType')} type="radio" value={type} className="sr-only" />
-                      <div
-                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 text-center border ${
-                          watchUserType === type
-                            ? 'bg-orange-500 text-white border-orange-500'
-                            : 'bg-blue-900/50 text-gray-300 border-blue-800/50 hover:bg-blue-800/50'
-                        }`}
-                      >
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </div>
-                    </label>
-                  ))}
-                </div>
-                {errors.userType && (
-                  <p className="mt-1 text-sm text-red-500 flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1" />
-                    {errors.userType.message}
-                  </p>
-                )}
-              </div>
-
               {/* Password */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
